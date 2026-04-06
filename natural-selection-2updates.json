@@ -1,0 +1,13 @@
+[
+    {
+        "UpdateStageName": "Download NS2 Server",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "SteamCMD",
+        "UpdateSourceData": "4940",
+        "SteamForceLoginPrompt": true,
+        "UnzipUpdateSource": false,
+        "OverwriteExistingFiles": false,
+        "DeleteAfterExtract": true,
+        "OneShot": false
+    }
+]
