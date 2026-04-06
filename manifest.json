@@ -1,10 +1,9 @@
 {
-    "id": "94d5addc-8b78-478c-9211-c54229263f02",
-    "authors": [
-        "SunnyDan - Made with AMP Config Generator"
-    ],
-    "origin": "https://github.com/SunnyDan - Made with AMP Config Generator/AMPTemplates.git",
-    "url": "https://github.com/SunnyDan - Made with AMP Config Generator/AMPTemplates",
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "authors": ["SunnyDan"],
+    "origin": "https://github.com/farmlan/amp-templates.git",
+    "url": "https://github.com/farmlan/amp-templates",
     "imagefile": "",
-    "prefix": "SunnyDan - Made with AMP Config Generator"
+    "prefix": "",
+    "repotype": "AppTemplates"
 }
