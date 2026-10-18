@@ -194,7 +194,13 @@ class H(BaseHTTPRequestHandler):
             if self.path in ("/", "/index.html"):
                 return self.send(200, (HERE / "index.html").read_bytes(), "text/html; charset=utf-8")
             if self.path == "/api/status":
-                d = status()
+                try:
+                    d = status()
+                except Exception as e:   # keep the join info up even if AMP is unreachable
+                    amp.inst_sid = None
+                    d = {"state": "Status unavailable", "online": False, "busy": False, "players": [],
+                         "playerCount": 0, "maxPlayers": 0, "mode": None, "map": None,
+                         "address": CFG["SERVER_ADDR"], "port": amp.port or "7777", "error": str(e)}
                 d["admin"] = self.admin()
                 return self.send(200, d)
             if self.path == "/api/console":
