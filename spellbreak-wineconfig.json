@@ -1,0 +1,48 @@
+[
+    {
+        "DisplayName": "Game Mode",
+        "Category": "Spellbreak:auto_fix_high",
+        "Subcategory": "Server:dns:1",
+        "Description": "Match type to host. Restart the server after changing.",
+        "Keywords": "game,mode,solo,duo,squad,dominion",
+        "FieldName": "GameMode",
+        "InputType": "enum",
+        "ParamFieldName": "GameMode",
+        "IncludeInCommandLine": false,
+        "DefaultValue": "Solo",
+        "EnumValues": {
+            "Solo": "Solo",
+            "Duo": "Duo",
+            "Squad": "Squad",
+            "Dominion": "Dominion"
+        }
+    },
+    {
+        "DisplayName": "Map",
+        "Category": "Spellbreak:auto_fix_high",
+        "Subcategory": "Server:dns:1",
+        "Description": "Map to load. Alpha_Resculpt is the standard battle royale map.",
+        "Keywords": "map,level",
+        "FieldName": "MapName",
+        "InputType": "text",
+        "ParamFieldName": "MapName",
+        "IncludeInCommandLine": false,
+        "DefaultValue": "Alpha_Resculpt",
+        "Placeholder": "Alpha_Resculpt",
+        "EnumValues": {}
+    },
+    {
+        "DisplayName": "Server Package URL",
+        "Category": "Spellbreak:auto_fix_high",
+        "Subcategory": "Install:download:2",
+        "Description": "Optional. Direct link to a .zip of the Windows server folder. Leave blank if you copy the files in manually (see README).",
+        "Keywords": "download,url,package,zip",
+        "FieldName": "ServerPackageURL",
+        "InputType": "text",
+        "ParamFieldName": "ServerPackageURL",
+        "IncludeInCommandLine": false,
+        "DefaultValue": "",
+        "Placeholder": "https://example.lan/spellbreak-server.zip",
+        "EnumValues": {}
+    }
+]

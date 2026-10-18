@@ -1,0 +1,37 @@
+[
+    {
+        "UpdateStageName": "Create Server Directory",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "CreateDirectory",
+        "UpdateSourceArgs": "{{$FullBaseDir}}",
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "Download Server Package (optional)",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "FetchURL",
+        "UpdateSourceData": "{{ServerPackageURL}}",
+        "UpdateSourceArgs": "spellbreak-server.zip",
+        "UpdateSourceTarget": "{{$FullBaseDir}}",
+        "UnzipUpdateSource": true,
+        "DeleteAfterExtract": true,
+        "OverwriteExistingFiles": true,
+        "SkipOnFailure": true
+    },
+    {
+        "UpdateStageName": "Initialise Wine",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "/bin/bash",
+        "UpdateSourceArgs": "-c \"[ -d \\\"{{$FullRootDir}}.wine\\\" ] || WINEPREFIX=\\\"{{$FullRootDir}}.wine\\\" WINEARCH=win64 WINEDEBUG=-all /usr/bin/wineboot --init\"",
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "Install UE4 Prerequisites",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "/bin/bash",
+        "UpdateSourceArgs": "-c \"f=$(ls \\\"{{$FullBaseDir}}\\\"Prereqs/*x64*.exe 2>/dev/null | head -1); [ -n \\\"$f\\\" ] && WINEPREFIX=\\\"{{$FullRootDir}}.wine\\\" WINEDEBUG=-all /usr/bin/wine \\\"$f\\\" /quiet /norestart || true\"",
+        "SkipOnFailure": true
+    }
+]
