@@ -21,7 +21,7 @@ STATES = {-1: "Unknown", 0: "Offline", 5: "Pre-start", 7: "Configuring", 10: "St
           20: "Online", 30: "Restarting", 40: "Stopping", 45: "Preparing to sleep",
           50: "Sleeping", 60: "Waiting", 70: "Installing", 75: "Updating",
           80: "Awaiting input", 100: "Failed", 200: "Suspended", 250: "Maintenance"}
-MODES = ["Solo", "Duo", "Squad", "Dominion"]
+MODES = ["Solo", "Duo", "Squad", "Capture"]   # Capture = Dominion
 
 
 class AMP:

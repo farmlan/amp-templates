@@ -58,9 +58,9 @@ button:disabled{opacity:.5;cursor:wait}
       <h2>How to connect</h2>
       <ol id="howto">
         <li>Launch the <b>Spellbreak Community Version</b> client.</li>
-        <li>Open the console with the <code>~</code> key.</li>
-        <li>Type <code>open <span class="a">-</span></code> and press Enter.</li>
-        <li>Wait for the match to fill, then good luck.</li>
+        <li>When it asks for a server, enter <code class="a">-</code> (address and port, with the colon).</li>
+        <li>Wait in the lobby until the match fills, then good luck.</li>
+        <li class="muted">Same LAN only. No internet or port forwarding needed.</li>
       </ol>
     </section>
 
@@ -88,7 +88,7 @@ button:disabled{opacity:.5;cursor:wait}
         <button class="d" data-act="stop">Stop</button>
       </div>
       <div class="row" style="margin-top:14px">
-        <select id="selMode"><option>Solo</option><option>Duo</option><option>Squad</option><option>Dominion</option></select>
+        <select id="selMode"><option>Solo</option><option>Duo</option><option>Squad</option><option value="Capture">Dominion</option></select>
         <input id="selMap" placeholder="Map (blank = keep)" style="max-width:220px">
         <button id="apply" class="p">Apply &amp; restart</button>
       </div>
@@ -113,7 +113,7 @@ async function refresh(){
     $("state").textContent=s.state;$("pill").className="pill "+(s.online?"on":s.busy?"busy":"off");
     lastAddr=`${s.address}:${s.port}`;$("addr").textContent=lastAddr;
     document.querySelectorAll(".a").forEach(e=>e.textContent=lastAddr);
-    $("mode").textContent=s.mode||"-";$("count").textContent=s.maxPlayers?`${s.playerCount}/${s.maxPlayers}`:s.playerCount;
+    $("mode").textContent=s.mode==="Capture"?"Dominion":(s.mode||"-");$("count").textContent=s.maxPlayers?`${s.playerCount}/${s.maxPlayers}`:s.playerCount;
     $("uptime").textContent=s.online?fmtUp(s.uptime):"-";
     $("players").innerHTML=s.players.length?"":'<li class="muted">Nobody yet</li>';
     s.players.forEach(p=>{const li=document.createElement("li");li.textContent=p;$("players").appendChild(li)});
