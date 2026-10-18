@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FarmLAN Spellbreak</title>
+<style>
+:root{--bg:#0f0b1a;--card:#1a1430;--line:#2e2550;--text:#ece8f7;--mute:#a69cc6;--acc:#a46cff;--acc2:#ff8a3d;--ok:#3ddc84;--warn:#ffc53d;--bad:#ff5c6c}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(1200px 600px at 70% -10%,#2a1655 0,var(--bg) 60%) fixed;color:var(--text)}
+.wrap{max-width:980px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+h1{margin:0;font-size:26px;letter-spacing:.5px}
+h1 span{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{margin:0 0 12px;font-size:16px;text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--mute)}
+.on .dot{background:var(--ok);box-shadow:0 0 10px var(--ok)} .busy .dot{background:var(--warn)} .off .dot{background:var(--bad)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.addr{font:600 24px/1.2 ui-monospace,Consolas,monospace;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}
+.stat b{display:block;font-size:22px} .stat small{color:var(--mute)}
+ol{margin:0;padding-left:20px} li{margin:4px 0} code{background:#0003;padding:1px 6px;border-radius:6px}
+ul.players{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto} ul.players li{padding:6px 0;border-bottom:1px solid var(--line)}
+.muted{color:var(--mute)}
+button,select,input{font:inherit;color:var(--text);background:#0f0b1a;border:1px solid var(--line);border-radius:10px;padding:9px 14px}
+button{cursor:pointer;font-weight:600;background:var(--line)} button:hover{border-color:var(--acc)}
+button.p{background:var(--acc);border-color:var(--acc);color:#140b26} button.d{background:transparent;border-color:var(--bad);color:var(--bad)}
+button:disabled{opacity:.5;cursor:wait}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#console{background:#07050d;border:1px solid var(--line);border-radius:10px;height:260px;overflow:auto;padding:10px;font:12px/1.45 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word;margin:10px 0}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--acc);padding:10px 18px;border-radius:10px;opacity:0;transition:.3s;pointer-events:none}
+#toast.show{opacity:1}
+.hide{display:none!important}
+@media (max-width:520px){.addr{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>FarmLAN <span>Spellbreak</span></h1>
+    <div id="pill" class="pill"><span class="dot"></span><span id="state">Connecting...</span></div>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Join the server</h2>
+      <div class="addr"><span id="addr">-</span><button id="copy" title="Copy address">Copy</button></div>
+      <div class="stats">
+        <div class="stat"><b id="mode">-</b><small>Game mode</small></div>
+        <div class="stat"><b id="count">0</b><small>Players</small></div>
+        <div class="stat"><b id="uptime">-</b><small>Uptime</small></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>How to connect</h2>
+      <ol id="howto">
+        <li>Launch the <b>Spellbreak Community Version</b> client.</li>
+        <li>Open the console with the <code>~</code> key.</li>
+        <li>Type <code>open <span class="a">-</span></code> and press Enter.</li>
+        <li>Wait for the match to fill, then good luck.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Players online</h2>
+      <ul class="players" id="players"><li class="muted">Nobody yet</li></ul>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">Admin</h2>
+      <button id="logout" class="hide">Lock</button>
+    </div>
+
+    <form id="login" class="row" style="margin-top:12px">
+      <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Admin PIN" style="max-width:180px">
+      <button class="p">Unlock</button>
+    </form>
+
+    <div id="panel" class="hide" style="margin-top:12px">
+      <div class="row">
+        <button class="p" data-act="start">Start</button>
+        <button data-act="restart">Restart</button>
+        <button class="d" data-act="stop">Stop</button>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <select id="selMode"><option>Solo</option><option>Duo</option><option>Squad</option><option>Dominion</option></select>
+        <input id="selMap" placeholder="Map (blank = keep)" style="max-width:220px">
+        <button id="apply" class="p">Apply &amp; restart</button>
+      </div>
+      <div id="console"></div>
+      <form id="cmd" class="row"><input id="cmdIn" placeholder="Console command" style="flex:1;min-width:200px"><button>Send</button></form>
+    </div>
+  </section>
+  <p class="muted" style="text-align:center;margin-top:20px">Managed by AMP on AMPHost01</p>
+</div>
+<div id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+let admin=false,lastAddr="";
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),2600)}
+async function api(path,body){
+  const r=await fetch(path,body===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||r.statusText);return j}
+function fmtUp(u){if(!u)return"-";const m=String(u).match(/(?:(\d+)\.)?(\d+):(\d+)/);if(!m)return u;const d=+(m[1]||0),h=+m[2],mi=+m[3];return d?`${d}d ${h}h`:h?`${h}h ${mi}m`:`${mi}m`}
+async function refresh(){
+  try{
+    const s=await api("/api/status");
+    $("state").textContent=s.state;$("pill").className="pill "+(s.online?"on":s.busy?"busy":"off");
+    lastAddr=`${s.address}:${s.port}`;$("addr").textContent=lastAddr;
+    document.querySelectorAll(".a").forEach(e=>e.textContent=lastAddr);
+    $("mode").textContent=s.mode||"-";$("count").textContent=s.maxPlayers?`${s.playerCount}/${s.maxPlayers}`:s.playerCount;
+    $("uptime").textContent=s.online?fmtUp(s.uptime):"-";
+    $("players").innerHTML=s.players.length?"":'<li class="muted">Nobody yet</li>';
+    s.players.forEach(p=>{const li=document.createElement("li");li.textContent=p;$("players").appendChild(li)});
+    setAdmin(s.admin);
+    if(document.activeElement!==$("selMode")&&s.mode)$("selMode").value=s.mode;
+    if(document.activeElement!==$("selMap")&&!$("selMap").value&&s.map)$("selMap").placeholder=`Map (now ${s.map})`;
+  }catch(e){$("state").textContent="UI can't reach AMP";$("pill").className="pill off"}
+}
+function setAdmin(a){admin=a;$("login").classList.toggle("hide",a);$("panel").classList.toggle("hide",!a);$("logout").classList.toggle("hide",!a)}
+async function loadConsole(){
+  if(!admin)return;try{const c=await api("/api/console");const el=$("console");const atEnd=el.scrollTop+el.clientHeight>=el.scrollHeight-20;el.textContent=c.lines.join("\n");if(atEnd)el.scrollTop=el.scrollHeight}catch(e){}
+}
+$("copy").onclick=()=>{navigator.clipboard?.writeText(lastAddr).then(()=>toast("Copied "+lastAddr),()=>toast(lastAddr))};
+$("login").onsubmit=async e=>{e.preventDefault();try{await api("/api/login",{pin:$("pin").value});$("pin").value="";setAdmin(true);loadConsole();toast("Unlocked")}catch(err){toast(err.message)}};
+$("logout").onclick=async()=>{await api("/api/logout",{});setAdmin(false)};
+document.querySelectorAll("[data-act]").forEach(b=>b.onclick=async()=>{
+  const act=b.dataset.act;if(act!=="start"&&!confirm(`${act[0].toUpperCase()+act.slice(1)} the server? Players will be disconnected.`))return;
+  b.disabled=true;try{await api("/api/"+act,{});toast(act+" sent")}catch(e){toast(e.message)}b.disabled=false;setTimeout(refresh,1500)});
+$("apply").onclick=async()=>{
+  if(!confirm(`Switch to ${$("selMode").value} and restart?`))return;
+  $("apply").disabled=true;try{await api("/api/mode",{mode:$("selMode").value,map:$("selMap").value,restart:true});$("selMap").value="";toast("Mode set, restarting")}catch(e){toast(e.message)}$("apply").disabled=false;setTimeout(refresh,1500)};
+$("cmd").onsubmit=async e=>{e.preventDefault();const v=$("cmdIn").value.trim();if(!v)return;try{await api("/api/command",{command:v});$("cmdIn").value=""}catch(err){toast(err.message)}};
+refresh();setInterval(refresh,5000);setInterval(loadConsole,2500);
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+[Unit]
+Description=FarmLAN Spellbreak web UI (AMP front end)
+After=network-online.target ampinstmgr.service
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/etc/spellbreak-webui.env
+ExecStart=/usr/bin/python3 /opt/spellbreak-webui/app.py
+DynamicUser=yes
+ProtectSystem=strict
+ProtectHome=yes
+NoNewPrivileges=yes
+PrivateTmp=yes
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
