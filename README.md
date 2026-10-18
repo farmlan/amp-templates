@@ -162,3 +162,42 @@ Click **Stop** in the AMP UI. NS2 uses SIGKILL so it will appear as a crash in t
 | 27017 | UDP | Main game traffic |
 | 27018 | UDP | Steam query |
 | 8090 | TCP | Web admin UI |
+
+
+---
+
+# Spellbreak Community (Linux Wine)
+
+Template: `spellbreak-wine.kvp`. Runs the Windows-only Spellbreak Community Version server under Wine in the `cubecoders/ampbase:wine-stable` container.
+
+## Setup
+
+1. Create the instance on AMPHost01 from **Spellbreak Community (Linux Wine)**. Set After Creation to **Do Nothing**.
+2. Copy the Windows server folder (the one with `g3`, `Engine`, `Prereqs` and the `.bat` files) into `/home/amp/.ampdata/instances/<Instance>/spellbreak/server/` and `chown -R amp:amp` it. Or set **Server Package URL** to a zip of that folder.
+3. Click **Update** (builds the Wine prefix and installs the UE4 prereqs), then **Start**.
+
+## Settings
+
+| Setting | Notes |
+|---|---|
+| Game Mode | Solo, Duo, Squad, Dominion (Dominion launches `game=Capture`). Restart after changing. |
+| Map | Defaults to `Alpha_Resculpt` |
+
+## Ports
+
+| Port | Protocol | Purpose |
+|---|---|---|
+| 7777 | UDP | Game traffic. Players join with `<server-ip>:7777` in the client. |
+
+## Web UI
+
+`spellbreak-webui/` is a small Python (stdlib only) front end: join page, live status and players, PIN-protected start/stop/restart, mode switch and console.
+
+```bash
+# on the AMP host, as root
+cd spellbreak-webui && bash install.sh
+nano /etc/spellbreak-webui.env   # AMP_USER, AMP_PASS, ADMIN_PIN
+systemctl restart spellbreak-webui
+```
+
+Serves on `http://<host>:8095`. Use a dedicated AMP user that only has access to the Spellbreak instance.
