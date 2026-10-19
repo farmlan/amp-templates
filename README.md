@@ -170,11 +170,17 @@ Click **Stop** in the AMP UI. NS2 uses SIGKILL so it will appear as a crash in t
 
 Template: `spellbreak-wine.kvp`. Runs the Windows-only Spellbreak Community Version server under Wine in the `cubecoders/ampbase:wine-stable` container.
 
+## How it runs
+
+AMP starts `spellbreak-run.sh` (fetched into the server folder on Update). The launcher starts `g3Server-Win64-Test.exe` under Wine, follows the game's own log (`g3/Saved/Logs/g3-<pid>.log`) and pipes it to AMP's console with the `!json{...}` metadata stripped, and stops the game cleanly when AMP stops the instance. AMP tracks the real game process for CPU and memory.
+
 ## Setup
 
 1. Create the instance on AMPHost01 from **Spellbreak Community (Linux Wine)**. Set After Creation to **Do Nothing**.
 2. Copy the Windows server folder (the one with `g3`, `Engine`, `Prereqs` and the `.bat` files) into `/home/amp/.ampdata/instances/<Instance>/spellbreak/server/` and `chown -R amp:amp` it. Or set **Server Package URL** to a zip of that folder.
-3. Click **Update** (builds the Wine prefix and installs the UE4 prereqs), then **Start**.
+3. Click **Update** (fetches the launcher, builds the Wine prefix, installs the UE4 prereqs), then **Start**.
+
+The optional "Download Server Package" step shows an error when Server Package URL is blank. That is expected; the update continues.
 
 ## Settings
 
@@ -189,15 +195,25 @@ Template: `spellbreak-wine.kvp`. Runs the Windows-only Spellbreak Community Vers
 |---|---|---|
 | 7777 | UDP | Game traffic. Players join with `<server-ip>:7777` in the client. |
 
+## Console
+
+AMP's console is read only in practice: the Spellbreak server does not accept typed commands. Player joins are detected from the `Recieved join options,{ PlayerName => name` log line (the misspelling is the game's).
+
 ## Web UI
 
-`spellbreak-webui/` is a small Python (stdlib only) front end: join page, live status and players, PIN-protected start/stop/restart, mode switch and console.
+`spellbreak-webui/` is a small Python (stdlib only) site: a public join page plus a PIN-protected admin area (overview with charts, match setup cards, players and session history, filterable console, settings).
 
 ```bash
 # on the AMP host, as root
 cd spellbreak-webui && bash install.sh
-nano /etc/spellbreak-webui.env   # AMP_USER, AMP_PASS, ADMIN_PIN
 systemctl restart spellbreak-webui
 ```
 
-Serves on `http://<host>:8095`. Use a dedicated AMP user that only has access to the Spellbreak instance.
+Then open `http://<host>:8095` and follow the first-run setup (AMP user, password, admin PIN). Settings and history live in `/var/lib/spellbreak-webui`.
+
+AMP permissions for the web UI user:
+
+- On the controller (192.168.5.13): user-specific permission for the Spellbreak instance (`Instances.<id>.*`).
+- Inside the instance: a role (e.g. "Spellbreak WebUI") allowing Start, Stop, Restart, Read Console and `Settings.Meta.GenericModule.*`, with the user as a member.
+
+`AMP_URL` in `/etc/spellbreak-webui.env` must point at the controller that handles logins (`http://192.168.5.13:8080`), not the local target ADS.

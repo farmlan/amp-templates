@@ -19,6 +19,16 @@
         "SkipOnFailure": true
     },
     {
+        "UpdateStageName": "Fetch Launcher Script",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "FetchURL",
+        "UpdateSourceData": "https://raw.githubusercontent.com/farmlan/amp-templates/main/spellbreak-run.sh",
+        "UpdateSourceArgs": "spellbreak-run.sh",
+        "UpdateSourceTarget": "{{$FullBaseDir}}",
+        "OverwriteExistingFiles": true,
+        "SkipOnFailure": false
+    },
+    {
         "UpdateStageName": "Initialise Wine",
         "UpdateSourcePlatform": "Linux",
         "UpdateSource": "Executable",
