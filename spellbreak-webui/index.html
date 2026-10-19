@@ -4,139 +4,696 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FarmLAN Spellbreak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f0b1a;--card:#1a1430;--line:#2e2550;--text:#ece8f7;--mute:#a69cc6;--acc:#a46cff;--acc2:#ff8a3d;--ok:#3ddc84;--warn:#ffc53d;--bad:#ff5c6c}
+:root{
+  --bg:#0a0713;--bg2:#120c22;--panel:#171030cc;--panel-solid:#171030;--line:#2c2150;--line2:#3a2c68;
+  --ink:#efeafc;--ink2:#b9afd8;--ink3:#8478a8;
+  --arcane:#a46cff;--arcane2:#7b3dff;--ember:#ff8a3d;
+  --fire:#ff6a3d;--frost:#5cc8ff;--bolt:#ffd84d;--wind:#6fe8c0;--stone:#d1a676;--toxic:#a3e05a;
+  --good:#3ddc84;--warn:#ffc53d;--bad:#ff5c6c;
+  --r:16px;--shadow:0 10px 40px #0008;
+  --display:"Cinzel",Georgia,serif;--sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
 *{box-sizing:border-box}
-body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(1200px 600px at 70% -10%,#2a1655 0,var(--bg) 60%) fixed;color:var(--text)}
-.wrap{max-width:980px;margin:0 auto;padding:24px 16px 48px}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-h1{margin:0;font-size:26px;letter-spacing:.5px}
-h1 span{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
-h2{margin:0 0 12px;font-size:16px;text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
-.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-weight:600}
-.dot{width:10px;height:10px;border-radius:50%;background:var(--mute)}
-.on .dot{background:var(--ok);box-shadow:0 0 10px var(--ok)} .busy .dot{background:var(--warn)} .off .dot{background:var(--bad)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-.addr{font:600 24px/1.2 ui-monospace,Consolas,monospace;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}
-.stat b{display:block;font-size:22px} .stat small{color:var(--mute)}
-ol{margin:0;padding-left:20px} li{margin:4px 0} code{background:#0003;padding:1px 6px;border-radius:6px}
-ul.players{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto} ul.players li{padding:6px 0;border-bottom:1px solid var(--line)}
-.muted{color:var(--mute)}
-button,select,input{font:inherit;color:var(--text);background:#0f0b1a;border:1px solid var(--line);border-radius:10px;padding:9px 14px}
-button{cursor:pointer;font-weight:600;background:var(--line)} button:hover{border-color:var(--acc)}
-button.p{background:var(--acc);border-color:var(--acc);color:#140b26} button.d{background:transparent;border-color:var(--bad);color:var(--bad)}
-button:disabled{opacity:.5;cursor:wait}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-#console{background:#07050d;border:1px solid var(--line);border-radius:10px;height:260px;overflow:auto;padding:10px;font:12px/1.45 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word;margin:10px 0}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--acc);padding:10px 18px;border-radius:10px;opacity:0;transition:.3s;pointer-events:none}
-#toast.show{opacity:1}
+html{background:var(--bg)}
+body{margin:0;min-height:100vh;font:15px/1.55 var(--sans);color:var(--ink);background:
+  radial-gradient(900px 500px at 85% -10%,#3b1a7a55,transparent 60%),
+  radial-gradient(700px 400px at -10% 30%,#ff8a3d1f,transparent 60%),
+  radial-gradient(800px 600px at 50% 120%,#5cc8ff14,transparent 60%),var(--bg);background-attachment:fixed}
+a{color:var(--arcane);text-decoration:none}
+button,input,select{font:inherit;color:inherit}
 .hide{display:none!important}
-@media (max-width:520px){.addr{font-size:19px}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);background:#0a0713cc;border-bottom:1px solid var(--line)}
+.top-in{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:18px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink);font:700 18px/1 var(--display);letter-spacing:1px;white-space:nowrap}
+.brand b{background:linear-gradient(90deg,var(--arcane),var(--ember));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand svg{width:30px;height:30px;filter:drop-shadow(0 0 8px #a46cff88)}
+nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1}
+nav a{padding:8px 12px;border-radius:10px;color:var(--ink2);font-weight:500;white-space:nowrap;display:flex;align-items:center;gap:7px}
+nav a svg{width:16px;height:16px;opacity:.8}
+nav a:hover{background:#ffffff0a;color:var(--ink)}
+@media(max-width:760px){.top-in{flex-wrap:wrap;row-gap:6px}.brand{flex:1}nav{order:3;flex-basis:100%}}
+nav a.on{background:linear-gradient(180deg,#a46cff2e,#a46cff14);color:var(--ink);box-shadow:inset 0 0 0 1px #a46cff55}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:99px;background:#ffffff08;border:1px solid var(--line);font-weight:600;font-size:13px;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ink3);flex:none}
+.st-on .dot{background:var(--good);box-shadow:0 0 0 4px #3ddc8422,0 0 12px var(--good);animation:pulse 2s infinite}
+.st-busy .dot{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+.st-off .dot{background:var(--bad)}
+@keyframes pulse{50%{box-shadow:0 0 0 7px #3ddc8400,0 0 12px var(--good)}}
+
+/* ---------- layout ---------- */
+main{max-width:1200px;margin:0 auto;padding:24px 16px 64px}
+.page{animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+h1,h2,h3{margin:0}
+.h-page{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.h-page h1{font:700 28px/1.2 var(--display);letter-spacing:.5px}
+.h-page p{margin:4px 0 0;color:var(--ink2)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g6{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media(max-width:960px){.g4,.g6{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:1fr}}
+@media(max-width:640px){.g2{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);position:relative;backdrop-filter:blur(8px)}
+.card h2{font:600 12px/1 var(--sans);letter-spacing:1.4px;text-transform:uppercase;color:var(--ink3);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.muted{color:var(--ink3)}.small{font-size:13px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:12px;border:1px solid var(--line2);background:#ffffff0a;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{border-color:var(--arcane);background:#a46cff1a}
+.btn svg{width:16px;height:16px}
+.btn.p{background:linear-gradient(135deg,var(--arcane),var(--arcane2));border-color:transparent;color:#fff;box-shadow:0 6px 20px #7b3dff55}
+.btn.p:hover{filter:brightness(1.1)}
+.btn.ok{color:var(--good);border-color:#3ddc8455}.btn.ok:hover{background:#3ddc841a}
+.btn.warn{color:var(--warn);border-color:#ffc53d55}.btn.warn:hover{background:#ffc53d1a}
+.btn.bad{color:var(--bad);border-color:#ff5c6c55}.btn.bad:hover{background:#ff5c6c1a}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;background:#ffffff08;border:1px solid var(--line);border-radius:11px;padding:3px}
+.seg button{border:0;background:none;padding:5px 11px;border-radius:8px;color:var(--ink2);font-weight:600;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--line2);color:var(--ink)}
+input.f,select.f{width:100%;background:#0a0713;border:1px solid var(--line2);border-radius:12px;padding:10px 13px;outline:none}
+input.f:focus{border-color:var(--arcane);box-shadow:0 0 0 3px #a46cff33}
+label.fl{display:block;font-size:13px;color:var(--ink2);margin:12px 0 6px}
+
+/* ---------- join page ---------- */
+.hero{position:relative;overflow:hidden;border-radius:24px;border:1px solid var(--line);padding:48px 32px;background:
+  radial-gradient(600px 300px at 20% 0%,#a46cff40,transparent 70%),radial-gradient(500px 300px at 90% 100%,#ff8a3d30,transparent 70%),linear-gradient(160deg,#1a1036,#0d0920);box-shadow:var(--shadow)}
+.hero .orb{position:absolute;border-radius:50%;filter:blur(2px);opacity:.55;animation:float 9s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-18px) scale(1.06)}}
+.hero h1{font:700 clamp(30px,5vw,52px)/1.05 var(--display);letter-spacing:1px;margin:10px 0 8px}
+.hero h1 span{background:linear-gradient(90deg,#fff,var(--arcane) 50%,var(--ember));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{color:var(--ink2);font-size:17px;max-width:560px;margin:0 0 26px}
+.addr-box{display:inline-flex;align-items:center;gap:6px;background:#0a0713cc;border:1px solid var(--line2);border-radius:16px;padding:8px 8px 8px 20px;box-shadow:0 0 0 6px #a46cff14}
+.addr-box code{font:600 clamp(20px,3.4vw,30px)/1 var(--mono);letter-spacing:.5px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:99px;background:#ffffff0a;border:1px solid var(--line);font-size:13px;font-weight:500}
+.chip .av{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#140b26}
+.steps{counter-reset:s;list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:start}
+.steps li::before{content:counter(s);width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font:700 15px var(--display);background:linear-gradient(135deg,#a46cff33,#ff8a3d22);border:1px solid var(--line2)}
+.steps b{display:block}
+code.k{font-family:var(--mono);background:#ffffff10;border:1px solid var(--line);padding:1px 7px;border-radius:7px;font-size:.92em}
+
+/* ---------- mode art ---------- */
+.mode-badge{display:flex;align-items:center;gap:14px}
+.mode-ic{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;flex:none;position:relative}
+.mode-ic svg{width:30px;height:30px}
+.m-Solo{--c1:var(--fire);--c2:#ff3d6e}.m-Duo{--c1:var(--bolt);--c2:var(--ember)}.m-Squad{--c1:var(--frost);--c2:var(--arcane)}.m-Capture{--c1:var(--wind);--c2:var(--toxic)}
+.mode-ic{background:radial-gradient(circle at 30% 25%,color-mix(in srgb,var(--c1) 55%,transparent),transparent 70%),linear-gradient(135deg,color-mix(in srgb,var(--c1) 30%,#150d2c),color-mix(in srgb,var(--c2) 30%,#150d2c));border:1px solid color-mix(in srgb,var(--c1) 50%,transparent);color:#fff;box-shadow:0 0 22px color-mix(in srgb,var(--c1) 35%,transparent)}
+.mode-name{font:700 22px/1.1 var(--display)}
+
+/* ---------- KPI tiles ---------- */
+.kpi .lbl{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink3);font-weight:600}
+.kpi .val{font:700 28px/1.15 var(--sans);margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:13px;color:var(--ink2);margin-top:2px}
+.meter{height:6px;border-radius:9px;background:#ffffff10;margin-top:10px;overflow:hidden}
+.meter i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--arcane),var(--ember));transition:width .6s}
+
+/* ---------- charts ---------- */
+.chart{position:relative;height:150px}
+.chart svg{width:100%;height:100%;display:block;overflow:visible}
+.chart .grid line{stroke:#ffffff10}
+.chart .axis text{fill:var(--ink3);font-size:11px;font-family:var(--sans)}
+.chart .tip{position:absolute;pointer-events:none;background:#0a0713f0;border:1px solid var(--line2);border-radius:10px;padding:6px 10px;font-size:12px;white-space:nowrap;transform:translate(-50%,-110%);opacity:0;transition:opacity .1s}
+.chart .tip b{font-size:14px;display:block}
+.chart-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.chart-head .big{font:700 22px var(--sans);font-variant-numeric:tabular-nums}
+.empty{display:grid;place-items:center;height:100%;color:var(--ink3);font-size:13px;text-align:center}
+
+/* ---------- events ---------- */
+.feed{list-style:none;margin:0;padding:0;max-height:360px;overflow:auto}
+.feed li{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:9px 2px;border-bottom:1px solid #ffffff0a;font-size:14px}
+.feed .ic{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#ffffff0a}
+.feed .ic svg{width:15px;height:15px}
+.feed time{color:var(--ink3);font-size:12px;font-variant-numeric:tabular-nums}
+.ev-join .ic{color:var(--good);background:#3ddc841a}.ev-leave .ic{color:var(--ink2)}.ev-admin .ic{color:var(--arcane);background:#a46cff1a}.ev-state .ic{color:var(--frost);background:#5cc8ff1a}.ev-system .ic{color:var(--warn);background:#ffc53d1a}
+
+/* ---------- match setup ---------- */
+.modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media(max-width:960px){.modes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.modes{grid-template-columns:1fr}}
+.mcard{cursor:pointer;text-align:left;border-radius:20px;padding:20px;border:1px solid var(--line);background:linear-gradient(170deg,color-mix(in srgb,var(--c1) 14%,#171030),#130d27);position:relative;overflow:hidden;transition:.2s;min-height:220px;display:flex;flex-direction:column;gap:12px}
+.mcard::after{content:"";position:absolute;inset:auto -40% -60% auto;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--c1) 40%,transparent),transparent 70%);opacity:.5;transition:.3s}
+.mcard:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c1) 60%,transparent)}
+.mcard:hover::after{opacity:.9}
+.mcard.sel{border-color:var(--c1);box-shadow:0 0 0 2px color-mix(in srgb,var(--c1) 60%,transparent),0 14px 40px color-mix(in srgb,var(--c1) 25%,transparent)}
+.mcard .tag{position:absolute;top:14px;right:14px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 9px;border-radius:99px;background:#0a0713aa;border:1px solid var(--line2)}
+.mcard.cur .tag.live{color:var(--good);border-color:#3ddc8466}
+.mcard p{margin:0;color:var(--ink2);font-size:14px;position:relative;z-index:1}
+.mcard .meta{margin-top:auto;display:flex;gap:8px;position:relative;z-index:1}
+.check{position:absolute;bottom:16px;right:16px;width:26px;height:26px;border-radius:50%;background:var(--c1);display:grid;place-items:center;color:#140b26;opacity:0;transform:scale(.6);transition:.2s;z-index:2}
+.mcard.sel .check{opacity:1;transform:none}
+.mapcard{display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:center}
+@media(max-width:640px){.mapcard{grid-template-columns:1fr}}
+.mapart{height:130px;border-radius:14px;border:1px solid var(--line2);background:
+  radial-gradient(circle at 30% 40%,#6fe8c055 0 18%,transparent 19%),radial-gradient(circle at 70% 60%,#d1a67655 0 22%,transparent 23%),radial-gradient(circle at 55% 25%,#5cc8ff44 0 12%,transparent 13%),
+  radial-gradient(circle at 50% 50%,transparent 0 44%,#a46cff55 45% 47%,transparent 48%),linear-gradient(135deg,#1d3a2d,#2a2240 60%,#3b2a1f);position:relative;overflow:hidden}
+.mapart::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#ffffff07 0 1px,transparent 1px 22px),repeating-linear-gradient(90deg,#ffffff07 0 1px,transparent 1px 22px)}
+.applybar{position:sticky;bottom:16px;margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px;border-radius:18px;background:#1a1036f2;border:1px solid var(--arcane);box-shadow:0 10px 40px #0009,0 0 0 4px #a46cff22;backdrop-filter:blur(10px);animation:fade .25s}
+.diff{font-weight:600}.diff s{color:var(--ink3)}
+
+/* ---------- tables ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tbl td{padding:10px;border-bottom:1px solid #ffffff0a;font-variant-numeric:tabular-nums}
+.tbl tr:hover td{background:#ffffff05}
+.bar{height:6px;border-radius:9px;background:linear-gradient(90deg,var(--arcane),var(--ember));min-width:4px}
+.who{display:flex;align-items:center;gap:10px;font-weight:600}
+.who .av{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-weight:700;color:#140b26;font-size:13px}
+.online-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.pcard{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:#ffffff07;border:1px solid var(--line)}
+.pcard .av{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:800;color:#140b26}
+
+/* ---------- console ---------- */
+.con-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.con{height:min(62vh,640px);overflow:auto;background:#06040c;border:1px solid var(--line);border-radius:14px;padding:12px 0;font:12.5px/1.6 var(--mono)}
+.con .ln{display:grid;grid-template-columns:76px 1fr;gap:10px;padding:1px 14px;white-space:pre-wrap;word-break:break-word}
+.con .ln:hover{background:#ffffff06}
+.con .ln time{color:#5f557f}
+.c-join{color:var(--good)}.c-warn{color:var(--warn)}.c-err{color:var(--bad)}.c-sys{color:var(--frost)}.c-info{color:#cfc7ea}.c-phys{color:#6d628f}
+.con mark{background:#a46cff55;color:#fff;border-radius:3px}
+.count{font-size:11px;padding:1px 7px;border-radius:99px;background:#ffffff12;margin-left:4px}
+
+/* ---------- modals / toast / login ---------- */
+.overlay{position:fixed;inset:0;background:#06040cdd;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;overflow:auto;animation:fade .2s}
+.modal{max-width:560px;width:100%}
+.modal h3{font:700 22px var(--display);margin-bottom:6px}
+.wsteps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.wsteps span{font-size:12px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--ink3)}
+.wsteps span.on{border-color:var(--arcane);color:var(--ink)}
+.err{color:var(--bad);font-size:14px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel-solid);border:1px solid var(--arcane);padding:11px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;z-index:60;box-shadow:var(--shadow);font-weight:500}
+#toast.show{opacity:1;transform:translateX(-50%)}
+.lock{max-width:380px;margin:40px auto;text-align:center}
+.lock .sig{width:84px;height:84px;margin:0 auto 14px;filter:drop-shadow(0 0 18px #a46cff99)}
+.pin{font:700 26px var(--mono);letter-spacing:10px;text-align:center}
+.banner{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:14px;background:#ffc53d14;border:1px solid #ffc53d55;color:var(--ink);margin-bottom:16px;font-size:14px}
+.banner svg{width:18px;height:18px;color:var(--warn);flex:none}
+footer{text-align:center;color:var(--ink3);font-size:13px;padding:10px 16px 30px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>FarmLAN <span>Spellbreak</span></h1>
-    <div id="pill" class="pill"><span class="dot"></span><span id="state">Connecting...</span></div>
-  </header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gArc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c79bff"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient>
+    <symbol id="i-sigil" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="none" stroke="url(#gArc)" stroke-width="2.5"/><circle cx="32" cy="32" r="20" fill="none" stroke="url(#gArc)" stroke-width="1.2" stroke-dasharray="3 4"/><path d="M32 8 L52 44 H12 Z" fill="none" stroke="url(#gArc)" stroke-width="2.5" stroke-linejoin="round"/><path d="M32 56 L12 20 H52 Z" fill="none" stroke="url(#gArc)" stroke-width="1.4" stroke-linejoin="round" opacity=".7"/><circle cx="32" cy="32" r="4" fill="url(#gArc)"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c1 3.5 5 5.5 5 10.5A5 5 0 0 1 12 18a5 5 0 0 1-5-5.2c0-2.3 1.3-3.8 2.4-4.8.2 1.6 1 2.7 2.1 3.2C10.8 8.6 11 5 12 2Zm0 20c-3.9 0-7-2.6-7-6.1 0-.7.1-1.3.3-1.9A6.9 6.9 0 0 0 12 20a6.9 6.9 0 0 0 6.7-6c.2.6.3 1.2.3 1.9 0 3.5-3.1 6.1-7 6.1Z"/></symbol>
+    <symbol id="i-duo" viewBox="0 0 24 24"><path fill="currentColor" d="M9.5 2 4 13h4l-1.5 9 7-12h-4L12 2H9.5Zm8 4-2.6 5.2h2.4L16.4 16l4.1-7h-2.3l1-3h-1.7Z"/></symbol>
+    <symbol id="i-squad" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3.2" fill="currentColor"/><circle cx="5.5" cy="17" r="3.2" fill="currentColor"/><circle cx="18.5" cy="17" r="3.2" fill="currentColor"/><path d="M12 9.5v2.5M8 15.3l2.6-1.8M16 15.3l-2.6-1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path fill="currentColor" d="M5 2h2v20H5V2Zm3 1h10l-2.5 4L18 11H8V3Z"/><circle cx="12.5" cy="7" r="1.6" fill="#150d2c"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 11 12 3l9 8v10h-6v-6H9v6H3z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z"/></symbol>
+    <symbol id="i-wand" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 20 15 9M15 3v3M18.5 5.5l-2 2M21 9h-3M12 6l.5 1.5L14 8l-1.5.5L12 10l-.5-1.5L10 8l1.5-.5z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM21 20v-1a4 4 0 0 0-3-3.8M15.5 4.2a3.5 3.5 0 0 1 0 6.6"/></symbol>
+    <symbol id="i-term" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 5h18v14H3zM7 9l3 3-3 3M12 15h5"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M7 4v16l13-8z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M9 9h11v11H9zM5 15H4V4h11v1"/></symbol>
+    <symbol id="i-in" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M10 17l5-5-5-5M15 12H3M15 4h5v16h-5"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M14 17l5-5-5-5M19 12H8M9 4H4v16h5"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M12 3 2 21h20zM12 10v5M12 18v.5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></symbol>
+    <symbol id="i-dl" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path fill="currentColor" d="M7 5h4v14H7zM13 5h4v14h-4z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5 10 17l9-10"/></symbol>
+  </defs>
+</svg>
 
-  <div class="grid">
-    <section class="card">
-      <h2>Join the server</h2>
-      <div class="addr"><span id="addr">-</span><button id="copy" title="Copy address">Copy</button></div>
-      <div class="stats">
-        <div class="stat"><b id="mode">-</b><small>Game mode</small></div>
-        <div class="stat"><b id="count">0</b><small>Players</small></div>
-        <div class="stat"><b id="uptime">-</b><small>Uptime</small></div>
-      </div>
-    </section>
+<header class="top"><div class="top-in">
+  <a class="brand" href="#/"><svg><use href="#i-sigil"/></svg><span>FarmLAN <b>Spellbreak</b></span></a>
+  <nav id="nav">
+    <a href="#/" data-r="join"><svg><use href="#i-home"/></svg>Join</a>
+    <a href="#/admin" data-r="overview" class="adm"><svg><use href="#i-grid"/></svg>Overview</a>
+    <a href="#/admin/match" data-r="match" class="adm"><svg><use href="#i-wand"/></svg>Match</a>
+    <a href="#/admin/players" data-r="players" class="adm"><svg><use href="#i-users"/></svg>Players</a>
+    <a href="#/admin/console" data-r="console" class="adm"><svg><use href="#i-term"/></svg>Console</a>
+    <a href="#/admin/settings" data-r="settings" class="adm"><svg><use href="#i-gear"/></svg>Settings</a>
+    <a href="#/admin" data-r="overview" class="lockln"><svg><use href="#i-lock"/></svg>Admin</a>
+  </nav>
+  <span id="pill" class="pill"><span class="dot"></span><span id="pillTxt">Connecting</span></span>
+</div></header>
 
-    <section class="card">
-      <h2>How to connect</h2>
-      <ol id="howto">
-        <li>Launch the <b>Spellbreak Community Version</b> client.</li>
-        <li>When it asks for a server, enter <code class="a">-</code> (address and port, with the colon).</li>
-        <li>Wait in the lobby until the match fills, then good luck.</li>
-        <li class="muted">Same LAN only. No internet or port forwarding needed.</li>
-      </ol>
-    </section>
-
-    <section class="card">
-      <h2>Players online</h2>
-      <ul class="players" id="players"><li class="muted">Nobody yet</li></ul>
-    </section>
+<main>
+<!-- ============ JOIN ============ -->
+<section id="p-join" class="page hide">
+  <div class="hero">
+    <div class="orb" style="width:180px;height:180px;right:6%;top:-40px;background:radial-gradient(circle,#a46cff,transparent 70%)"></div>
+    <div class="orb" style="width:120px;height:120px;right:22%;bottom:-30px;background:radial-gradient(circle,#ff8a3d,transparent 70%);animation-delay:-3s"></div>
+    <div class="orb" style="width:70px;height:70px;right:10%;bottom:30%;background:radial-gradient(circle,#5cc8ff,transparent 70%);animation-delay:-6s"></div>
+    <span class="pill" id="jState"><span class="dot"></span><span>Connecting</span></span>
+    <h1><span>Enter the Fracture</span></h1>
+    <p class="lead">The FarmLAN Spellbreak server is hosted right here on the LAN. Grab the address below and join from the Community Version client.</p>
+    <div class="row">
+      <div class="addr-box"><code id="jAddr">192.168.5.15:7777</code><button class="btn p" id="jCopy"><svg><use href="#i-copy"/></svg>Copy</button></div>
+    </div>
   </div>
 
-  <section class="card" style="margin-top:16px">
-    <div class="row" style="justify-content:space-between">
-      <h2 style="margin:0">Admin</h2>
-      <button id="logout" class="hide">Lock</button>
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card">
+      <h2>Now playing</h2>
+      <div class="mode-badge" id="jMode"></div>
+      <div class="muted small" style="margin-top:12px" id="jMap"></div>
     </div>
+    <div class="card">
+      <h2>Mages online <span id="jCount" class="pill" style="font-size:12px">0</span></h2>
+      <div class="chips" id="jPlayers"><span class="muted small">Nobody in the lobby yet. Be the first.</span></div>
+      <div class="meter" style="margin-top:16px"><i id="jFill" style="width:0"></i></div>
+      <div class="muted small" style="margin-top:6px" id="jFillTxt"></div>
+    </div>
+    <div class="card">
+      <h2>Server</h2>
+      <div class="kpi"><div class="val" id="jUp">-</div><div class="sub">Uptime</div></div>
+    </div>
+  </div>
 
-    <form id="login" class="row" style="margin-top:12px">
-      <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Admin PIN" style="max-width:180px">
-      <button class="p">Unlock</button>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h2>How to join</h2>
+      <ol class="steps">
+        <li><div><b>Launch the client</b><span class="muted">Open Spellbreak Community Version on your PC.</span></div></li>
+        <li><div><b>Enter the server address</b><span class="muted">When asked for a server, type <code class="k" data-addr>192.168.5.15:7777</code> with the colon.</span></div></li>
+        <li><div><b>Wait in the lobby</b><span class="muted">The match starts once enough mages connect. Hang tight.</span></div></li>
+      </ol>
+    </div>
+    <div class="card">
+      <h2>Good to know</h2>
+      <ol class="steps">
+        <li><div><b>LAN only</b><span class="muted">You need to be on the FarmLAN network. No port forwarding or internet needed.</span></div></li>
+        <li><div><b>Can't connect?</b><span class="muted">Check the status light up top. If it isn't green, the server is starting or switching modes. Give it a minute.</span></div></li>
+        <li><div><b>Wrong mode?</b><span class="muted">Ask an admin. They can switch between Solo, Duo, Squad and Dominion in a few seconds.</span></div></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOCK ============ -->
+<section id="p-lock" class="page hide">
+  <div class="card lock">
+    <svg class="sig"><use href="#i-sigil"/></svg>
+    <h3 style="font:700 24px var(--display)">Admin sanctum</h3>
+    <p class="muted">Enter the admin PIN to manage the server.</p>
+    <form id="lockForm">
+      <input class="f pin" id="lockPin" type="password" inputmode="numeric" autocomplete="off" maxlength="12" aria-label="Admin PIN" placeholder="••••">
+      <button class="btn p" style="width:100%;margin-top:12px"><svg><use href="#i-lock"/></svg>Unlock</button>
+      <p class="err hide" id="lockErr"></p>
     </form>
+  </div>
+</section>
 
-    <div id="panel" class="hide" style="margin-top:12px">
-      <div class="row">
-        <button class="p" data-act="start">Start</button>
-        <button data-act="restart">Restart</button>
-        <button class="d" data-act="stop">Stop</button>
-      </div>
-      <div class="row" style="margin-top:14px">
-        <select id="selMode"><option>Solo</option><option>Duo</option><option>Squad</option><option value="Capture">Dominion</option></select>
-        <input id="selMap" placeholder="Map (blank = keep)" style="max-width:220px">
-        <button id="apply" class="p">Apply &amp; restart</button>
-      </div>
-      <div id="console"></div>
-      <form id="cmd" class="row"><input id="cmdIn" placeholder="Console command" style="flex:1;min-width:200px"><button>Send</button></form>
+<!-- ============ OVERVIEW ============ -->
+<section id="p-overview" class="page hide">
+  <div class="h-page"><div><h1>Overview</h1><p>Live health of the Spellbreak server.</p></div>
+    <div class="row">
+      <button class="btn ok" data-act="start"><svg><use href="#i-play"/></svg>Start</button>
+      <button class="btn warn" data-act="restart"><svg><use href="#i-restart"/></svg>Restart</button>
+      <button class="btn bad" data-act="stop"><svg><use href="#i-stop"/></svg>Stop</button>
     </div>
-  </section>
-  <p class="muted" style="text-align:center;margin-top:20px">Managed by AMP on AMPHost01</p>
+  </div>
+  <div id="ovErr" class="banner hide"><svg><use href="#i-alert"/></svg><span></span></div>
+  <div class="grid g6">
+    <div class="card kpi"><div class="lbl">Status</div><div class="val" id="kState">-</div><div class="sub" id="kUp">-</div></div>
+    <div class="card kpi"><div class="lbl">Players</div><div class="val" id="kPlayers">-</div><div class="meter"><i id="kPlayersBar"></i></div></div>
+    <div class="card kpi"><div class="lbl">Mode</div><div class="val" id="kMode">-</div><div class="sub" id="kMap">-</div></div>
+    <div class="card kpi"><div class="lbl">CPU</div><div class="val" id="kCpu">-</div><div class="meter"><i id="kCpuBar"></i></div></div>
+    <div class="card kpi"><div class="lbl">Memory</div><div class="val" id="kMem">-</div><div class="meter"><i id="kMemBar"></i></div></div>
+    <div class="card kpi"><div class="lbl">Address</div><div class="val" style="font:600 14px var(--mono);margin-top:12px;overflow-wrap:anywhere" id="kAddr">-</div><div class="sub">UDP</div></div>
+  </div>
+  <div class="row" style="margin:22px 0 10px"><h2 style="font:700 18px var(--display)">Trends</h2><span class="sp"></span>
+    <div class="seg" id="range"><button data-m="60" class="on">1h</button><button data-m="360">6h</button><button data-m="1440">24h</button><button data-m="10080">7d</button></div>
+  </div>
+  <div class="grid g3">
+    <div class="card"><div class="chart-head"><h2 style="margin:0">Players online</h2><span class="big" id="cPlayersNow">-</span></div><div class="chart" id="chPlayers"></div></div>
+    <div class="card"><div class="chart-head"><h2 style="margin:0">CPU usage</h2><span class="big" id="cCpuNow">-</span></div><div class="chart" id="chCpu"></div></div>
+    <div class="card"><div class="chart-head"><h2 style="margin:0">Memory</h2><span class="big" id="cMemNow">-</span></div><div class="chart" id="chMem"></div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h2>Recent activity <a href="#/admin/players" class="small">All players</a></h2><ul class="feed" id="ovFeed"></ul></div>
+    <div class="card"><h2>Online now</h2><div class="online-list" id="ovOnline"></div></div>
+  </div>
+</section>
+
+<!-- ============ MATCH ============ -->
+<section id="p-match" class="page hide">
+  <div class="h-page"><div><h1>Match setup</h1><p>Pick a mode and map. Applying restarts the server, so players get disconnected for about a minute.</p></div></div>
+  <div class="modes" id="modes"></div>
+  <div class="card" style="margin-top:16px">
+    <h2>Map</h2>
+    <div class="mapcard">
+      <div class="mapart" aria-hidden="true"></div>
+      <div>
+        <div class="mode-name" id="mapName">Alpha_Resculpt</div>
+        <p class="muted" style="margin:6px 0 12px">The standard battle royale map. Enter a different map name only if you know it exists in this server build.</p>
+        <div class="row"><input class="f" id="mapIn" placeholder="Alpha_Resculpt" style="max-width:280px" spellcheck="false"><button class="btn sm" id="mapReset">Use default</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="applybar hide" id="applyBar">
+    <svg style="width:22px;height:22px;color:var(--arcane)"><use href="#i-wand"/></svg>
+    <span class="diff" id="diffTxt"></span><span class="sp"></span>
+    <label class="row small muted" style="gap:6px"><input type="checkbox" id="noRestart"> Save without restarting</label>
+    <button class="btn" id="applyCancel">Cancel</button>
+    <button class="btn p" id="applyGo"><svg><use href="#i-restart"/></svg>Apply &amp; restart</button>
+  </div>
+</section>
+
+<!-- ============ PLAYERS ============ -->
+<section id="p-players" class="page hide">
+  <div class="h-page"><div><h1>Players</h1><p>Who's online, who's played, and for how long.</p></div></div>
+  <div class="card"><h2>Online now <span class="pill" id="plCount" style="font-size:12px">0</span></h2><div class="online-list" id="plOnline"></div></div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h2>Hall of mages</h2><div style="overflow:auto"><table class="tbl" id="plTotals"></table></div></div>
+    <div class="card"><h2>Recent sessions</h2><div style="overflow:auto;max-height:420px"><table class="tbl" id="plSessions"></table></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2>Event timeline</h2><ul class="feed" id="plFeed" style="max-height:480px"></ul></div>
+  <p class="muted small" style="margin-top:12px">Joins come from the server log. Spellbreak doesn't log a clear "player left" line, so sessions also close when the server stops or restarts. Times are approximate.</p>
+</section>
+
+<!-- ============ CONSOLE ============ -->
+<section id="p-console" class="page hide">
+  <div class="h-page"><div><h1>Console</h1><p>Live server log. Read only: Spellbreak has no server-side command console.</p></div></div>
+  <div class="card">
+    <div class="con-tools">
+      <div class="seg" id="conFilter">
+        <button data-f="all" class="on">All</button><button data-f="join">Joins<span class="count" id="nJoin">0</span></button><button data-f="warn">Warnings<span class="count" id="nWarn">0</span></button><button data-f="err">Errors<span class="count" id="nErr">0</span></button>
+      </div>
+      <label class="row small muted" style="gap:6px"><input type="checkbox" id="hidePhys" checked> Hide physics spam</label>
+      <span class="sp"></span>
+      <input class="f" id="conSearch" placeholder="Search log" style="max-width:220px;padding:7px 12px">
+      <button class="btn sm" id="conPause"><svg><use href="#i-pause"/></svg><span>Pause</span></button>
+      <a class="btn sm" href="/api/console.txt"><svg><use href="#i-dl"/></svg>Download</a>
+    </div>
+    <div class="con" id="con" tabindex="0" aria-label="Server log"></div>
+    <div class="row small muted" style="margin-top:8px"><span id="conInfo">Waiting for log lines</span><span class="sp"></span><button class="btn sm hide" id="conJump">Jump to latest</button></div>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section id="p-settings" class="page hide">
+  <div class="h-page"><div><h1>Settings</h1><p>How this web UI connects to AMP, and who can manage it.</p></div></div>
+  <div class="grid g2">
+    <div class="card">
+      <h2>AMP connection</h2>
+      <table class="tbl"><tbody>
+        <tr><td class="muted">Controller</td><td id="sAmpUrl">-</td></tr>
+        <tr><td class="muted">Instance</td><td id="sInstance">-</td></tr>
+        <tr><td class="muted">Signed in as</td><td id="sAmpUser">-</td></tr>
+        <tr><td class="muted">Player address</td><td id="sAddrTxt">-</td></tr>
+      </tbody></table>
+      <div class="row" style="margin-top:14px"><button class="btn p" id="sEdit"><svg><use href="#i-gear"/></svg>Change connection or PIN</button></div>
+    </div>
+    <div class="card">
+      <h2>Admin session</h2>
+      <p class="muted" style="margin-top:0">You stay unlocked on this device for 12 hours. Lock when you step away from a shared PC.</p>
+      <button class="btn bad" id="sLock"><svg><use href="#i-lock"/></svg>Lock admin now</button>
+      <h2 style="margin-top:22px">About</h2>
+      <p class="muted small" style="margin:0">Runs on AMPHost01 as the <code class="k">spellbreak-webui</code> service. History is kept for 14 days. Source lives in <code class="k">farmlan/amp-templates</code>.</p>
+    </div>
+  </div>
+</section>
+</main>
+<footer>FarmLAN · Spellbreak Community Version · managed by AMP</footer>
+
+<!-- confirm modal -->
+<div id="confirm" class="overlay hide" role="dialog" aria-modal="true">
+  <div class="card modal"><h3 id="cfTitle">Are you sure?</h3><p class="muted" id="cfText"></p>
+    <div class="row" style="justify-content:flex-end;margin-top:18px"><button class="btn" id="cfNo">Cancel</button><button class="btn p" id="cfYes">Confirm</button></div></div>
 </div>
-<div id="toast"></div>
+
+<!-- setup wizard -->
+<div id="setup" class="overlay hide" role="dialog" aria-modal="true">
+  <div class="card modal">
+    <div class="wsteps"><span data-s="1">1 Welcome</span><span data-s="2">2 Connect AMP</span><span data-s="3">3 Admin PIN</span><span data-s="4">4 Done</span></div>
+    <section data-step="1">
+      <h3 id="setupTitle">Welcome to the Spellbreak web UI</h3>
+      <p>This site shows players how to join and gives admins controls for the <b id="wInst">Spellbreak01</b> AMP instance.</p>
+      <p>First, create a dedicated user in AMP (Configuration, then User Management) that has access to the Spellbreak instance only.</p>
+      <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn p" data-go="2">I have an AMP user</button></div>
+    </section>
+    <section data-step="2" class="hide">
+      <h3>Connect to AMP</h3>
+      <p class="muted">Signs in to the AMP controller at <code class="k" id="wAmp">-</code>. The password stays on AMPHost01.</p>
+      <label class="fl">AMP username (case-sensitive)<input class="f" id="wUser" autocomplete="off"></label>
+      <label class="fl">AMP password<input class="f" id="wPass" type="password" autocomplete="new-password"></label>
+      <label class="fl">Address shown to players<input class="f" id="wAddr"></label>
+      <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" data-go="1" id="wBack1">Back</button><button class="btn p" data-go="3">Next</button></div>
+    </section>
+    <section data-step="3" class="hide">
+      <h3>Admin PIN</h3>
+      <p class="muted">Anyone with this PIN can control the server from this site. 4 to 12 digits.</p>
+      <label class="fl">PIN<input class="f" id="wPin" type="password" inputmode="numeric" autocomplete="new-password"></label>
+      <label class="fl">Confirm PIN<input class="f" id="wPin2" type="password" inputmode="numeric" autocomplete="new-password"></label>
+      <p class="err hide" id="wErr"></p>
+      <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" data-go="2">Back</button><button class="btn p" id="wSave">Test and save</button></div>
+    </section>
+    <section data-step="4" class="hide">
+      <h3>All set</h3>
+      <p>Connected to AMP, and this device is unlocked as admin.</p>
+      <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn p" id="wDone">Open the admin site</button></div>
+    </section>
+    <button class="btn sm hide" id="wClose" style="position:absolute;top:14px;right:14px">Close</button>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
 <script>
-const $=id=>document.getElementById(id);
-let admin=false,lastAddr="";
-function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),2600)}
+"use strict";
+const $=id=>document.getElementById(id), $$=(s,el=document)=>[...el.querySelectorAll(s)];
+const MODES=[
+  {id:"Solo",name:"Solo",icon:"i-flame",team:"1 mage per team",desc:"Every mage for themselves. Outlast the storm and everyone else to win."},
+  {id:"Duo",name:"Duo",icon:"i-duo",team:"2 mages per team",desc:"Pair up with a partner and combine your elements."},
+  {id:"Squad",name:"Squad",icon:"i-squad",team:"3 mages per team",desc:"Teams of three. Coordinate classes and push together."},
+  {id:"Capture",name:"Dominion",icon:"i-flag",team:"Team objective",desc:"Team mode built around capturing and holding control points."}];
+const modeOf=id=>MODES.find(m=>m.id===id);
+const AV=["#ff8a3d","#5cc8ff","#ffd84d","#6fe8c0","#d1a676","#a3e05a","#c79bff","#ff6a9a"];
+const avColor=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))>>>0;return AV[h%AV.length]};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let S={},admin=false,route="join",hist={minutes:60,points:[]};
+
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),2800)}
 async function api(path,body){
   const r=await fetch(path,body===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||r.statusText);return j}
-function fmtUp(u){if(!u)return"-";const m=String(u).match(/(?:(\d+)\.)?(\d+):(\d+)/);if(!m)return u;const d=+(m[1]||0),h=+m[2],mi=+m[3];return d?`${d}d ${h}h`:h?`${h}h ${mi}m`:`${mi}m`}
+  const j=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(j.error||r.statusText);e.status=r.status;throw e}return j}
+function confirmBox(title,text,yes="Confirm",danger=false){return new Promise(res=>{
+  $("cfTitle").textContent=title;$("cfText").textContent=text;$("cfYes").textContent=yes;$("cfYes").className="btn "+(danger?"bad":"p");
+  $("confirm").classList.remove("hide");const done=v=>{$("confirm").classList.add("hide");res(v)};$("cfYes").onclick=()=>done(true);$("cfNo").onclick=()=>done(false)})}
+const fmtDur=s=>{s=Math.max(0,Math.round(s));const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return d?`${d}d ${h}h`:h?`${h}h ${m}m`:m?`${m}m`:`${s}s`};
+const fmtUp=u=>{if(!u)return"-";const p=String(u).split(/[.:]/).map(Number);if(p.some(isNaN)||p.length<3)return u;while(p.length<4)p.unshift(0);return fmtDur(p[0]*86400+p[1]*3600+p[2]*60+p[3])};
+const fmtTime=t=>new Date(t*1000).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+const fmtAgo=t=>{const s=Date.now()/1000-t;return s<60?"just now":s<3600?`${Math.floor(s/60)}m ago`:s<86400?`${Math.floor(s/3600)}h ago`:new Date(t*1000).toLocaleDateString([],{month:"short",day:"numeric"})};
+const memTxt=mb=>mb>=1024?(mb/1024).toFixed(2)+" GB":Math.round(mb)+" MB";
+const modeBadge=id=>{const m=modeOf(id);if(!m)return`<div class="mode-name muted">Unknown</div>`;
+  return`<div class="mode-ic m-${m.id}"><svg><use href="#${m.icon}"/></svg></div><div><div class="mode-name">${m.name}</div><div class="muted small">${m.team}</div></div>`};
+
+/* ---------------- routing ---------------- */
+const ROUTES={"":"join","admin":"overview","admin/match":"match","admin/players":"players","admin/console":"console","admin/settings":"settings"};
+function go(){
+  const key=location.hash.replace(/^#\/?/,"");route=ROUTES[key]??"join";
+  const needAdmin=route!=="join";
+  $$("main .page").forEach(p=>p.classList.add("hide"));
+  if(needAdmin&&!admin){$("p-lock").classList.remove("hide");setTimeout(()=>$("lockPin").focus(),50)}
+  else $("p-"+route).classList.remove("hide");
+  $$("#nav a").forEach(a=>a.classList.toggle("on",a.dataset.r===route));
+  if(admin&&route==="overview")loadOverview();
+  if(admin&&route==="players")loadPlayers();
+  if(admin&&route==="match")renderModes();
+  if(admin&&route==="settings")loadSettings();
+  if(admin&&route==="console")renderConsole(true);
+}
+window.addEventListener("hashchange",go);
+function setAdmin(a){const was=admin;admin=a;$$("#nav .adm").forEach(x=>x.classList.toggle("hide",!a));$$("#nav .lockln").forEach(x=>x.classList.toggle("hide",a));if(a!==was)go()}
+
+/* ---------------- status ---------------- */
 async function refresh(){
-  try{
-    const s=await api("/api/status");
-    $("state").textContent=s.state;$("pill").className="pill "+(s.online?"on":s.busy?"busy":"off");
-    lastAddr=`${s.address}:${s.port}`;$("addr").textContent=lastAddr;
-    document.querySelectorAll(".a").forEach(e=>e.textContent=lastAddr);
-    $("mode").textContent=s.mode==="Capture"?"Dominion":(s.mode||"-");$("count").textContent=s.maxPlayers?`${s.playerCount}/${s.maxPlayers}`:s.playerCount;
-    $("uptime").textContent=s.online?fmtUp(s.uptime):"-";
-    $("players").innerHTML=s.players.length?"":'<li class="muted">Nobody yet</li>';
-    s.players.forEach(p=>{const li=document.createElement("li");li.textContent=p;$("players").appendChild(li)});
-    setAdmin(s.admin);
-    if(document.activeElement!==$("selMode")&&s.mode)$("selMode").value=s.mode;
-    if(document.activeElement!==$("selMap")&&!$("selMap").value&&s.map)$("selMap").placeholder=`Map (now ${s.map})`;
-  }catch(e){$("state").textContent="UI can't reach AMP";$("pill").className="pill off"}
+  try{S=await api("/api/status")}catch(e){S={state:"Offline",online:false}}
+  const cls=S.online?"st-on":S.busy?"st-busy":"st-off";
+  $("pill").className="pill "+cls;$("pillTxt").textContent=S.state||"-";
+  $("jState").className="pill "+cls;$("jState").lastElementChild.textContent=S.online?"Server online":S.state||"Offline";
+  const addr=`${S.address||"192.168.5.15"}:${S.port||"7777"}`;
+  $("jAddr").textContent=addr;$$("[data-addr]").forEach(e=>e.textContent=addr);
+  $("jMode").innerHTML=modeBadge(S.mode);$("jMap").textContent=S.map?`Map: ${S.map}`:"";
+  const pl=S.players||[],max=S.maxPlayers||42,n=S.playerCount||pl.length;
+  $("jCount").textContent=`${n} / ${max}`;
+  $("jPlayers").innerHTML=pl.length?pl.map(p=>`<span class="chip"><span class="av" style="background:${avColor(p)}">${esc(p[0]?.toUpperCase())}</span>${esc(p)}</span>`).join(""):`<span class="muted small">Nobody in the lobby yet. Be the first.</span>`;
+  $("jFill").style.width=Math.min(100,n/max*100)+"%";$("jFillTxt").textContent=S.online?`${max-n} spots open`:"";
+  $("jUp").textContent=S.online?fmtUp(S.uptime):"Offline";
+  if(S.admin!==admin)setAdmin(!!S.admin);
+  if(admin)renderKpis();
 }
-function setAdmin(a){admin=a;$("login").classList.toggle("hide",a);$("panel").classList.toggle("hide",!a);$("logout").classList.toggle("hide",!a)}
-async function loadConsole(){
-  if(!admin)return;try{const c=await api("/api/console");const el=$("console");const atEnd=el.scrollTop+el.clientHeight>=el.scrollHeight-20;el.textContent=c.lines.join("\n");if(atEnd)el.scrollTop=el.scrollHeight}catch(e){}
+function renderKpis(){
+  const max=S.maxPlayers||42,n=S.playerCount||0;
+  $("kState").textContent=S.state||"-";$("kState").style.color=S.online?"var(--good)":S.busy?"var(--warn)":"var(--bad)";
+  $("kUp").textContent=S.online?"Up "+fmtUp(S.uptime):"Not running";
+  $("kPlayers").textContent=`${n} / ${max}`;$("kPlayersBar").style.width=Math.min(100,n/max*100)+"%";
+  $("kMode").textContent=modeOf(S.mode)?.name||"-";$("kMap").textContent=S.map||"-";
+  $("kCpu").textContent=S.online?`${S.cpu}%`:"-";$("kCpuBar").style.width=Math.min(100,S.cpu||0)+"%";
+  $("kMem").textContent=S.memMB?memTxt(S.memMB):"-";$("kMemBar").style.width=S.memMaxMB?Math.min(100,S.memMB/S.memMaxMB*100)+"%":"0";
+  $("kAddr").textContent=`${S.address}:${S.port}`;
+  $("cPlayersNow").textContent=n;$("cCpuNow").textContent=S.online?S.cpu+"%":"-";$("cMemNow").textContent=S.memMB?memTxt(S.memMB):"-";
+  const eb=$("ovErr");eb.classList.toggle("hide",!S.error);if(S.error)eb.lastElementChild.textContent="AMP: "+S.error;
+  $$("[data-act]").forEach(b=>{const a=b.dataset.act;b.disabled=(a==="start"&&(S.online||S.busy))||(a!=="start"&&!S.online&&!S.busy)});
 }
-$("copy").onclick=()=>{navigator.clipboard?.writeText(lastAddr).then(()=>toast("Copied "+lastAddr),()=>toast(lastAddr))};
-$("login").onsubmit=async e=>{e.preventDefault();try{await api("/api/login",{pin:$("pin").value});$("pin").value="";setAdmin(true);loadConsole();toast("Unlocked")}catch(err){toast(err.message)}};
-$("logout").onclick=async()=>{await api("/api/logout",{});setAdmin(false)};
-document.querySelectorAll("[data-act]").forEach(b=>b.onclick=async()=>{
-  const act=b.dataset.act;if(act!=="start"&&!confirm(`${act[0].toUpperCase()+act.slice(1)} the server? Players will be disconnected.`))return;
-  b.disabled=true;try{await api("/api/"+act,{});toast(act+" sent")}catch(e){toast(e.message)}b.disabled=false;setTimeout(refresh,1500)});
-$("apply").onclick=async()=>{
-  if(!confirm(`Switch to ${$("selMode").value} and restart?`))return;
-  $("apply").disabled=true;try{await api("/api/mode",{mode:$("selMode").value,map:$("selMap").value,restart:true});$("selMap").value="";toast("Mode set, restarting")}catch(e){toast(e.message)}$("apply").disabled=false;setTimeout(refresh,1500)};
-$("cmd").onsubmit=async e=>{e.preventDefault();const v=$("cmdIn").value.trim();if(!v)return;try{await api("/api/command",{command:v});$("cmdIn").value=""}catch(err){toast(err.message)}};
-refresh();setInterval(refresh,5000);setInterval(loadConsole,2500);
+
+/* ---------------- charts (single series each, SVG + crosshair tooltip) ---------------- */
+function lineChart(el,pts,key,{color,fmt,maxY}){
+  if(pts.length<2){el.innerHTML=`<div class="empty">Collecting data.<br>Trends appear after a few minutes.</div>`;return}
+  const W=el.clientWidth||300,H=el.clientHeight||150,pl=34,pr=8,pt=8,pb=20;
+  const t0=pts[0].t,t1=pts[pts.length-1].t,vals=pts.map(p=>p[key]);
+  const ymax=Math.max(maxY??0,...vals)*1.1||1,x=t=>pl+(t-t0)/(t1-t0||1)*(W-pl-pr),y=v=>pt+(1-v/ymax)*(H-pt-pb);
+  const d=pts.map((p,i)=>`${i?"L":"M"}${x(p.t).toFixed(1)},${y(p[key]).toFixed(1)}`).join("");
+  const area=d+`L${x(t1).toFixed(1)},${y(0)}L${x(t0).toFixed(1)},${y(0)}Z`;
+  const ticks=[0,ymax/2,ymax].map(v=>`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}"/>`).join("");
+  const ylab=[0,ymax/2,ymax].map(v=>`<text x="${pl-6}" y="${y(v)+4}" text-anchor="end">${fmt(v,true)}</text>`).join("");
+  const xl=[t0,(t0+t1)/2,t1].map((t,i)=>`<text x="${x(t)}" y="${H-4}" text-anchor="${["start","middle","end"][i]}">${fmtTime(t)}</text>`).join("");
+  const gid="g"+key+Math.random().toString(36).slice(2,6);
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${key} over time"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".35"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+    <g class="grid">${ticks}</g><g class="axis">${ylab}${xl}</g><path d="${area}" fill="url(#${gid})"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <line class="xh" y1="${pt}" y2="${H-pb}" stroke="#ffffff40" stroke-dasharray="3 3" opacity="0"/><circle class="xd" r="5" fill="${color}" stroke="#0a0713" stroke-width="2" opacity="0"/>
+    <rect x="${pl}" y="0" width="${W-pl-pr}" height="${H}" fill="transparent" class="hit"/></svg><div class="tip"></div>`;
+  const svg=el.querySelector("svg"),tip=el.querySelector(".tip"),xh=svg.querySelector(".xh"),xd=svg.querySelector(".xd");
+  const move=ev=>{const r=svg.getBoundingClientRect(),mx=(ev.touches?ev.touches[0].clientX:ev.clientX)-r.left,tt=t0+(mx-pl)/(W-pl-pr)*(t1-t0);
+    let best=pts[0];for(const p of pts)if(Math.abs(p.t-tt)<Math.abs(best.t-tt))best=p;
+    const px=x(best.t),py=y(best[key]);xh.setAttribute("x1",px);xh.setAttribute("x2",px);xh.setAttribute("opacity",1);xd.setAttribute("cx",px);xd.setAttribute("cy",py);xd.setAttribute("opacity",1);
+    tip.innerHTML=`<b>${fmt(best[key])}</b>${new Date(best.t*1000).toLocaleString([],{weekday:"short",hour:"numeric",minute:"2-digit"})}`;tip.style.left=px/W*r.width+"px";tip.style.top=py/H*r.height+"px";tip.style.opacity=1};
+  const leave=()=>{xh.setAttribute("opacity",0);xd.setAttribute("opacity",0);tip.style.opacity=0};
+  svg.addEventListener("mousemove",move);svg.addEventListener("touchmove",move,{passive:true});svg.addEventListener("mouseleave",leave);svg.addEventListener("touchend",leave);
+}
+function drawCharts(){
+  const p=hist.points;
+  lineChart($("chPlayers"),p,"players",{color:"#c79bff",fmt:v=>Math.round(v)+"",maxY:4});
+  lineChart($("chCpu"),p,"cpu",{color:"#ff8a3d",fmt:(v,a)=>(a?Math.round(v):v.toFixed(1))+"%",maxY:10});
+  lineChart($("chMem"),p,"mem",{color:"#5cc8ff",fmt:(v,a)=>a?(v>=1024?(v/1024).toFixed(1)+"G":Math.round(v)+"M"):memTxt(v),maxY:512});
+}
+$$("#range button").forEach(b=>b.onclick=()=>{$$("#range button").forEach(x=>x.classList.toggle("on",x===b));hist.minutes=+b.dataset.m;loadOverview()});
+window.addEventListener("resize",()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>admin&&route==="overview"&&drawCharts(),150)});
+
+/* ---------------- events / players ---------------- */
+const EV_IC={join:"i-in",leave:"i-out",admin:"i-wand",state:"i-bolt",system:"i-alert"};
+function evText(e){const d=esc(e.detail);return{join:`<b>${d}</b> joined`,leave:`<b>${d}</b> left`,admin:d,state:`Server ${d}`,system:d}[e.kind]||d}
+function feedHtml(evs){return evs.length?evs.map(e=>`<li class="ev-${e.kind}"><span class="ic"><svg><use href="#${EV_IC[e.kind]||"i-bolt"}"/></svg></span><span>${evText(e)}</span><time title="${new Date(e.t*1000).toLocaleString()}">${fmtAgo(e.t)}</time></li>`).join(""):`<li><span></span><span class="muted">No activity yet.</span><span></span></li>`}
+function onlineHtml(list){return list.length?list.map(p=>`<div class="pcard"><span class="av" style="background:${avColor(p.name)}">${esc(p.name[0]?.toUpperCase())}</span><div><b>${esc(p.name)}</b><div class="muted small">In session ${fmtDur(Date.now()/1000-p.since)}</div></div></div>`).join(""):`<div class="muted">No mages online right now.</div>`}
+async function loadOverview(){
+  try{const [h,ev,pl]=await Promise.all([api("/api/history?minutes="+hist.minutes),api("/api/events?limit=25"),api("/api/players")]);
+    hist.points=h.points;drawCharts();$("ovFeed").innerHTML=feedHtml(ev.events);$("ovOnline").innerHTML=onlineHtml(pl.online)}catch(e){if(e.status===403)setAdmin(false)}
+}
+async function loadPlayers(){
+  try{const [pl,ev]=await Promise.all([api("/api/players"),api("/api/events?limit=200")]);
+    $("plCount").textContent=pl.online.length;$("plOnline").innerHTML=onlineHtml(pl.online);
+    const top=Math.max(1,...pl.totals.map(t=>t.seconds));
+    $("plTotals").innerHTML=`<thead><tr><th>Mage</th><th>Sessions</th><th>Play time</th><th>Last seen</th></tr></thead><tbody>`+(pl.totals.length?pl.totals.map(t=>`<tr><td><span class="who"><span class="av" style="background:${avColor(t.name)}">${esc(t.name[0]?.toUpperCase())}</span>${esc(t.name)}</span></td><td>${t.sessions}</td><td><div>${fmtDur(t.seconds)}</div><div class="bar" style="width:${t.seconds/top*100}%"></div></td><td class="muted">${fmtAgo(t.lastSeen)}</td></tr>`).join(""):`<tr><td colspan="4" class="muted">No players recorded yet.</td></tr>`)+"</tbody>";
+    $("plSessions").innerHTML=`<thead><tr><th>Mage</th><th>Joined</th><th>Length</th></tr></thead><tbody>`+(pl.sessions.length?pl.sessions.map(s=>`<tr><td>${esc(s.name)}</td><td class="muted">${new Date(s.joined*1000).toLocaleString([],{weekday:"short",hour:"numeric",minute:"2-digit"})}</td><td>${s.left?fmtDur(s.left-s.joined):`<span style="color:var(--good)">● live</span>`}</td></tr>`).join(""):`<tr><td colspan="3" class="muted">No sessions yet.</td></tr>`)+"</tbody>";
+    $("plFeed").innerHTML=feedHtml(ev.events)}catch(e){if(e.status===403)setAdmin(false)}
+}
+
+/* ---------------- match setup ---------------- */
+let pick=null;
+function renderModes(){
+  const cur=S.mode;if(pick===null)pick=cur;
+  $("modes").innerHTML=MODES.map(m=>`<button class="mcard m-${m.id} ${m.id===pick?"sel":""} ${m.id===cur?"cur":""}" data-m="${m.id}" aria-pressed="${m.id===pick}">
+    ${m.id===cur?`<span class="tag live">● Live</span>`:""}<div class="mode-ic"><svg><use href="#${m.icon}"/></svg></div>
+    <div class="mode-name" style="position:relative;z-index:1">${m.name}</div><p>${m.desc}</p><div class="meta"><span class="chip">${m.team}</span></div><span class="check"><svg style="width:14px;height:14px"><use href="#i-check"/></svg></span></button>`).join("");
+  $$("#modes .mcard").forEach(b=>b.onclick=()=>{pick=b.dataset.m;renderModes()});
+  $("mapName").textContent=S.map||"Alpha_Resculpt";$("mapIn").placeholder=S.map||"Alpha_Resculpt";
+  updateApply();
+}
+function updateApply(){
+  const mp=$("mapIn").value.trim(),modeCh=pick&&pick!==S.mode,mapCh=mp&&mp!==S.map;
+  $("applyBar").classList.toggle("hide",!(modeCh||mapCh));
+  const parts=[];if(modeCh)parts.push(`<s>${modeOf(S.mode)?.name||"?"}</s> → ${modeOf(pick).name}`);if(mapCh)parts.push(`<s>${esc(S.map||"?")}</s> → ${esc(mp)}`);
+  $("diffTxt").innerHTML=parts.join(" · ");
+  $("applyGo").lastChild.textContent=$("noRestart").checked?"Save":"Apply & restart";
+}
+$("mapIn").oninput=updateApply;$("noRestart").onchange=updateApply;
+$("mapReset").onclick=()=>{$("mapIn").value="Alpha_Resculpt";updateApply()};
+$("applyCancel").onclick=()=>{pick=S.mode;$("mapIn").value="";renderModes()};
+$("applyGo").onclick=async()=>{
+  const restart=!$("noRestart").checked,m=modeOf(pick);
+  if(restart&&S.online&&(S.playerCount||0)>0&&!await confirmBox("Restart with players online?",`${S.playerCount} player(s) will be disconnected while the server switches to ${m.name}.`,"Restart now",true))return;
+  $("applyGo").disabled=true;
+  try{await api("/api/mode",{mode:pick,map:$("mapIn").value.trim(),restart});toast(restart?`Switching to ${m.name}. Back in about a minute.`:"Saved. Applies on next restart.");$("mapIn").value="";pick=null;setTimeout(refresh,800)}
+  catch(e){toast(e.message)}$("applyGo").disabled=false};
+
+/* ---------------- actions ---------------- */
+$$("[data-act]").forEach(b=>b.onclick=async()=>{
+  const a=b.dataset.act,n=S.playerCount||0;
+  if(a!=="start"&&!await confirmBox(`${a==="stop"?"Stop":"Restart"} the server?`,n?`${n} player(s) are online and will be disconnected.`:"Nobody is online right now.",a==="stop"?"Stop server":"Restart",a==="stop"))return;
+  b.disabled=true;try{await api("/api/"+a,{});toast({start:"Starting server",stop:"Stopping server",restart:"Restarting server"}[a])}catch(e){toast(e.message)}setTimeout(refresh,1200)});
+
+/* ---------------- console ---------------- */
+const con={lines:[],last:0,paused:false,filter:"all",counts:{join:0,warn:0,err:0}};
+function classify(t){
+  if(/Recieved join options|Join succeeded|Added player/.test(t))return"join";
+  if(/LogPhysics|StaticMeshComponent|MBP bounds|SpawnActor failed because of collision/.test(t))return"phys";
+  if(/Error|Fatal|Exception|failed/i.test(t)&&!/Warning/.test(t))return"err";
+  if(/Warning/.test(t))return"warn";
+  if(/^(Spellbreak|Following|Stopping|No server log)/.test(t)||/LogWorld|LogLoad|Bringing up level/.test(t))return"sys";
+  return"info"}
+function lineHtml(l,q){let tx=esc(l.text.replace(/^\[[\d.:-]+\]\[\s*\d+\]/,""));if(q){const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi");tx=tx.replace(re,m=>`<mark>${m}</mark>`)}
+  return`<div class="ln c-${l.c}"><time>${new Date(l.t*1000).toLocaleTimeString([],{hour12:false})}</time><span>${l.c==="join"?"● ":""}${tx}</span></div>`}
+function visible(l){const q=$("conSearch").value.trim().toLowerCase();
+  if($("hidePhys").checked&&l.c==="phys")return false;if(con.filter!=="all"&&l.c!==con.filter)return false;if(q&&!l.text.toLowerCase().includes(q))return false;return true}
+function renderConsole(full){
+  const el=$("con"),atEnd=el.scrollTop+el.clientHeight>=el.scrollHeight-30,q=$("conSearch").value.trim();
+  const vis=con.lines.filter(visible).slice(-1500);
+  el.innerHTML=vis.length?vis.map(l=>lineHtml(l,q)).join(""):`<div class="empty" style="height:200px">No lines match.</div>`;
+  if(atEnd||full)el.scrollTop=el.scrollHeight;
+  $("nJoin").textContent=con.counts.join;$("nWarn").textContent=con.counts.warn;$("nErr").textContent=con.counts.err;
+  $("conInfo").textContent=`${vis.length} of ${con.lines.length} lines shown${con.paused?" · paused":""}`;
+}
+async function pollConsole(){
+  if(!admin)return;
+  try{const r=await api("/api/console?after="+con.last);
+    if(r.last<con.last){con.lines=[];con.counts={join:0,warn:0,err:0}}
+    for(const l of r.lines){l.c=classify(l.text);if(con.counts[l.c]!==undefined)con.counts[l.c]++;con.lines.push(l)}
+    if(con.lines.length>4000)con.lines=con.lines.slice(-4000);con.last=r.last;
+    if(route==="console"&&!con.paused&&r.lines.length)renderConsole(false)}catch(e){if(e.status===403)setAdmin(false)}
+}
+$$("#conFilter button").forEach(b=>b.onclick=()=>{$$("#conFilter button").forEach(x=>x.classList.toggle("on",x===b));con.filter=b.dataset.f;renderConsole(true)});
+$("hidePhys").onchange=()=>renderConsole(true);$("conSearch").oninput=()=>renderConsole(true);
+$("conPause").onclick=()=>{con.paused=!con.paused;$("conPause").lastElementChild.textContent=con.paused?"Resume":"Pause";$("conPause").firstElementChild.firstElementChild.setAttribute("href",con.paused?"#i-play":"#i-pause");if(!con.paused)renderConsole(true);else renderConsole(false)};
+$("con").addEventListener("scroll",()=>{const el=$("con");$("conJump").classList.toggle("hide",el.scrollTop+el.clientHeight>=el.scrollHeight-30)});
+$("conJump").onclick=()=>{$("con").scrollTop=$("con").scrollHeight};
+
+/* ---------------- lock / settings / wizard ---------------- */
+$("lockForm").onsubmit=async e=>{e.preventDefault();$("lockErr").classList.add("hide");
+  try{await api("/api/login",{pin:$("lockPin").value});$("lockPin").value="";await refresh();setAdmin(true);go();pollConsole();toast("Welcome back, archmage")}
+  catch(err){$("lockErr").textContent=err.message;$("lockErr").classList.remove("hide");$("lockPin").select()}};
+$("sLock").onclick=async()=>{await api("/api/logout",{});admin=false;location.hash="#/";go();toast("Admin locked")};
+async function loadSettings(){const s=await api("/api/setup");$("sAmpUrl").textContent=s.ampUrl;$("sInstance").textContent=s.instance;$("sAmpUser").textContent=s.ampUser||"-";$("sAddrTxt").textContent=`${S.address}:${S.port}`}
+let editing=false;
+function wstep(n){$$("#setup [data-step]").forEach(s=>s.classList.toggle("hide",s.dataset.step!=n));$$("#setup .wsteps span").forEach(s=>s.classList.toggle("on",+s.dataset.s<=n));const f={2:"wUser",3:"wPin"}[n];if(f)setTimeout(()=>$(f).focus(),50)}
+async function openWizard(isEdit){editing=isEdit;const s=await api("/api/setup");
+  $("wInst").textContent=s.instance;$("wAmp").textContent=s.ampUrl;$("wAddr").value=s.serverAddr;$("wUser").value=s.ampUser||"";
+  $("setupTitle").textContent=isEdit?"Web UI settings":"Welcome to the Spellbreak web UI";
+  $("wPass").placeholder=isEdit?"Leave blank to keep the saved password":"";$("wPin").placeholder=isEdit?"Leave blank to keep the current PIN":"";
+  $("wClose").classList.toggle("hide",!isEdit);$("wBack1").classList.toggle("hide",isEdit);$("setup").classList.remove("hide");wstep(isEdit?2:1)}
+$$("#setup [data-go]").forEach(b=>b.onclick=()=>{if(b.dataset.go==="3"&&(!$("wUser").value.trim()||(!editing&&!$("wPass").value))){toast("Enter the AMP username and password");return}wstep(b.dataset.go)});
+$("wSave").onclick=async()=>{const pin=$("wPin").value,err=$("wErr");err.classList.add("hide");
+  if((pin||!editing)&&pin!==$("wPin2").value){err.textContent="PINs don't match";err.classList.remove("hide");return}
+  $("wSave").disabled=true;$("wSave").textContent="Testing...";
+  try{await api(editing?"/api/settings":"/api/setup",{ampUser:$("wUser").value.trim(),ampPass:$("wPass").value,pin,serverAddr:$("wAddr").value.trim()});["wPass","wPin","wPin2"].forEach(i=>$(i).value="");wstep(4)}
+  catch(e){err.textContent=e.message;err.classList.remove("hide")}$("wSave").disabled=false;$("wSave").textContent="Test and save"};
+$("wDone").onclick=async()=>{$("setup").classList.add("hide");await refresh();if(!editing)location.hash="#/admin";go();loadSettings().catch(()=>{})};
+$("wClose").onclick=()=>$("setup").classList.add("hide");
+$("sEdit").onclick=()=>openWizard(true);
+$("jCopy").onclick=()=>{const a=$("jAddr").textContent;(navigator.clipboard?.writeText(a)||Promise.reject()).then(()=>toast("Copied "+a),()=>{const r=document.createRange();r.selectNodeContents($("jAddr"));getSelection().removeAllRanges();getSelection().addRange(r);toast("Press Ctrl+C to copy")})};
+
+/* ---------------- boot ---------------- */
+(async()=>{
+  setAdmin(false);await refresh();go();
+  api("/api/setup").then(s=>{if(s.needed)openWizard(false)}).catch(()=>{});
+  setInterval(refresh,4000);setInterval(pollConsole,2500);pollConsole();
+  setInterval(()=>{if(!admin)return;if(route==="overview")loadOverview();if(route==="players")loadPlayers()},20000);
+})();
 </script>
 </body>
 </html>
