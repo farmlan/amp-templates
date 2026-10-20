@@ -1,0 +1,9 @@
+[
+  {
+    "Protocol": "UDP",
+    "Port": 49176,
+    "Ref": "GamePort",
+    "Name": "Game Port",
+    "Description": "Players join here and the Server Browser queries it. Also picks which [[server]] in dedicated.toml this instance runs (the one with this port)."
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "UpdateStageName": "Create Server Folders",
+    "UpdateSourcePlatform": "Linux",
+    "UpdateSource": "CreateDirectory",
+    "UpdateSourceArgs": "{{$FullRootDir}}server/game",
+    "SkipOnFailure": false
+  },
+  {
+    "UpdateStageName": "Fetch Launcher Script",
+    "UpdateSourcePlatform": "Linux",
+    "UpdateSource": "FetchURL",
+    "UpdateSourceData": "https://raw.githubusercontent.com/farmlan/amp-templates/main/reclaimer-run.sh",
+    "UpdateSourceArgs": "reclaimer-run.sh",
+    "UpdateSourceTarget": "{{$FullBaseDir}}",
+    "OverwriteExistingFiles": true,
+    "SkipOnFailure": false
+  },
+  {
+    "UpdateStageName": "Pull Docker Image",
+    "UpdateSourcePlatform": "Linux",
+    "UpdateSource": "Executable",
+    "UpdateSourceData": "/bin/bash",
+    "UpdateSourceArgs": "\"{{$FullBaseDir}}reclaimer-run.sh\" pull image={{Image}}",
+    "SkipOnFailure": false
+  }
+]
