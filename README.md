@@ -224,7 +224,7 @@ Template: `project-reclaimer.kvp`. Runs a [Project Reclaimer](https://projectrec
 
 ### How it runs
 
-`reclaimer-run.sh` (fetched on Update) lives in `reclaimer/server`, the server folder, laid out like `C:\reclaimer` from `dedicated init`. Update downloads `project-reclaimer-dedicated-<version>.exe` from the Reclaimer releases as `project-reclaimer.exe`, creates the Wine prefix and installs the Visual C++ 2015-2022 runtime. Start runs `project-reclaimer.exe dedicated` with `RECLAIMER_DEDICATED_ONLY` set to the AMP Game Port, so the instance runs the `[[server]]` in `dedicated.toml` with that port. Stop sends Ctrl+C (SIGINT), the documented clean stop.
+`reclaimer-run.sh` (fetched on Update) lives in `reclaimer/server`, the server folder, laid out like `C:\reclaimer` from `dedicated init`. Update downloads `project-reclaimer-dedicated-v<version>.exe` from the Reclaimer releases (checked against its SHA256SUMS.txt) as `project-reclaimer.exe`, creates the Wine prefix and installs the Visual C++ 2015-2022 runtime. Start runs `project-reclaimer.exe dedicated` with `RECLAIMER_DEDICATED_ONLY` set to the AMP Game Port, so the instance runs the `[[server]]` in `dedicated.toml` with that port. Stop sends Ctrl+C (SIGINT), the documented clean stop.
 
 ### Setup
 

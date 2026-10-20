@@ -42,7 +42,20 @@ if [ "$MODE" = "update" ]; then
     echo "Project Reclaimer $VERSION is already installed"
   else
     echo "Downloading Project Reclaimer $VERSION (dedicated build)..."
-    wget -q "$REPO/releases/download/v$VERSION/project-reclaimer-dedicated-$VERSION.exe" -O "$EXE.new"
+    BASE="$REPO/releases/download/v$VERSION"
+    ASSET="project-reclaimer-dedicated-v$VERSION.exe"
+    if ! wget -q "$BASE/$ASSET" -O "$EXE.new"; then
+      ASSET="project-reclaimer-dedicated-$VERSION.exe"   # older naming
+      wget -q "$BASE/$ASSET" -O "$EXE.new" || { rm -f "$EXE.new"; echo "Release v$VERSION has no dedicated build"; exit 1; }
+    fi
+    # Check it against the release's SHA256SUMS.txt when the release has one.
+    if wget -q "$BASE/SHA256SUMS.txt" -O .sums 2>/dev/null; then
+      WANT=$(grep -i " \*\?$ASSET\$" .sums | awk '{print tolower($1)}')
+      GOT=$(sha256sum "$EXE.new" | awk '{print $1}')
+      rm -f .sums
+      if [ -n "$WANT" ] && [ "$WANT" != "$GOT" ]; then rm -f "$EXE.new"; echo "Checksum mismatch for $ASSET"; exit 1; fi
+      [ -n "$WANT" ] && echo "Checksum OK"
+    fi
     mv -f "$EXE.new" "$EXE"
     echo "$VERSION" > .reclaimer-version
     echo "Installed Project Reclaimer $VERSION"
@@ -53,10 +66,14 @@ if [ "$MODE" = "update" ]; then
   fi
   if [ ! -f "$WINEPREFIX/.vcrun2022" ]; then
     echo "Installing the Visual C++ 2015-2022 runtime into Wine..."
-    wget -q "https://aka.ms/vs/17/release/vc_redist.x64.exe" -O "$ROOT_DIR/vc_redist.x64.exe"
-    xvfb-run -a wine "$ROOT_DIR/vc_redist.x64.exe" /quiet /norestart >/dev/null 2>&1 || true
+    if wget -q "https://aka.ms/vs/17/release/vc_redist.x64.exe" -O "$ROOT_DIR/vc_redist.x64.exe"; then
+      xvfb-run -a wine "$ROOT_DIR/vc_redist.x64.exe" /quiet /norestart >/dev/null 2>&1 || true
+      touch "$WINEPREFIX/.vcrun2022"
+      echo "Visual C++ runtime installed"
+    else
+      echo "WARNING: couldn't download the Visual C++ runtime; Update will try again next time"
+    fi
     rm -f "$ROOT_DIR/vc_redist.x64.exe"
-    touch "$WINEPREFIX/.vcrun2022"
   fi
   mkdir -p game content playlists data
   echo "Update finished"
