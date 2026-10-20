@@ -156,6 +156,7 @@ code.k{font-family:var(--mono);background:#ffffff10;border:1px solid var(--line)
   radial-gradient(circle at 30% 40%,#6fe8c055 0 18%,transparent 19%),radial-gradient(circle at 70% 60%,#d1a67655 0 22%,transparent 23%),radial-gradient(circle at 55% 25%,#5cc8ff44 0 12%,transparent 13%),
   radial-gradient(circle at 50% 50%,transparent 0 44%,#a46cff55 45% 47%,transparent 48%),linear-gradient(135deg,#1d3a2d,#2a2240 60%,#3b2a1f);position:relative;overflow:hidden}
 .mapart::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#ffffff07 0 1px,transparent 1px 22px),repeating-linear-gradient(90deg,#ffffff07 0 1px,transparent 1px 22px)}
+.botopts{display:grid;gap:8px}.botopt{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:14px;border:1px solid var(--line2);background:#ffffff06;cursor:pointer}.botopt:has(input:checked){border-color:var(--arcane);background:#a46cff14}.botopt input{margin-top:4px;accent-color:var(--arcane)}.botopt b{display:block}
 .applybar{position:sticky;bottom:16px;margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px;border-radius:18px;background:#1a1036f2;border:1px solid var(--arcane);box-shadow:0 10px 40px #0009,0 0 0 4px #a46cff22;backdrop-filter:blur(10px);animation:fade .25s}
 .diff{font-weight:600}.diff s{color:var(--ink3)}
 
@@ -344,25 +345,18 @@ footer{text-align:center;color:var(--ink3);font-size:13px;padding:10px 16px 30px
 
 <!-- ============ MATCH ============ -->
 <section id="p-match" class="page hide">
-  <div class="h-page"><div><h1>Match setup</h1><p>Pick a mode and map. Applying restarts the server, so players get disconnected for about a minute.</p></div></div>
+  <div class="h-page"><div><h1>Match setup</h1><p>Pick a mode to set up the next match. You'll choose bots next. Applying restarts the server, so players get disconnected for about a minute.</p></div></div>
   <div class="modes" id="modes"></div>
   <div class="card" style="margin-top:16px">
-    <h2>Map</h2>
+    <h2>Current match</h2>
     <div class="mapcard">
       <div class="mapart" aria-hidden="true"></div>
       <div>
         <div class="mode-name" id="mapName">Alpha_Resculpt</div>
-        <p class="muted" style="margin:6px 0 12px">The standard battle royale map. Enter a different map name only if you know it exists in this server build.</p>
-        <div class="row"><input class="f" id="mapIn" placeholder="Alpha_Resculpt" style="max-width:280px" spellcheck="false"><button class="btn sm" id="mapReset">Use default</button></div>
+        <p class="muted" style="margin:6px 0 10px" id="mapDesc"></p>
+        <div class="chips"><span class="chip" id="curModeChip">-</span><span class="chip" id="curBotsChip">-</span></div>
       </div>
     </div>
-  </div>
-  <div class="applybar hide" id="applyBar">
-    <svg style="width:22px;height:22px;color:var(--arcane)"><use href="#i-wand"/></svg>
-    <span class="diff" id="diffTxt"></span><span class="sp"></span>
-    <label class="row small muted" style="gap:6px"><input type="checkbox" id="noRestart"> Save without restarting</label>
-    <button class="btn" id="applyCancel">Cancel</button>
-    <button class="btn p" id="applyGo"><svg><use href="#i-restart"/></svg>Apply &amp; restart</button>
   </div>
 </section>
 
@@ -422,6 +416,26 @@ footer{text-align:center;color:var(--ink3);font-size:13px;padding:10px 16px 30px
 </section>
 </main>
 <footer>FarmLAN · Spellbreak Community Version · managed by AMP</footer>
+
+<!-- match setup modal -->
+<div id="mm" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="mmTitle">
+  <div class="card modal">
+    <div class="mode-badge" id="mmBadge"></div>
+    <h3 id="mmTitle" class="sr">Set up match</h3>
+    <label class="fl">Bots</label>
+    <div class="botopts">
+      <label class="botopt"><input type="radio" name="bots" value="fill" checked><span><b>Everyone's here: fill the rest with bots</b><span class="muted small" id="mmFillTxt"></span></span></label>
+      <label class="botopt"><input type="radio" name="bots" value="none"><span><b>No bots, humans only</b><span class="muted small">Only real players in the match.</span></span></label>
+    </div>
+    <div class="row" id="mmCountRow" style="margin-top:10px"><span class="muted small">Number of bots</span><input class="f" id="mmCount" type="number" min="1" max="41" style="max-width:110px"></div>
+    <p class="muted small" style="margin-top:12px">The server restarts into the new match. Players need to rejoin, then the match starts once the lobby countdown finishes.</p>
+    <div class="row" style="justify-content:flex-end;margin-top:16px;gap:8px">
+      <button class="btn" id="mmCancel">Cancel</button>
+      <button class="btn" id="mmSave">Save for next restart</button>
+      <button class="btn p" id="mmGo"><svg><use href="#i-restart"/></svg>Apply &amp; restart</button>
+    </div>
+  </div>
+</div>
 
 <!-- confirm modal -->
 <div id="confirm" class="overlay hide" role="dialog" aria-modal="true">
@@ -595,32 +609,42 @@ async function loadPlayers(){
 }
 
 /* ---------------- match setup ---------------- */
-let pick=null;
+const MAPS={
+  Alpha_Resculpt:{name:"Alpha_Resculpt",desc:"The main battle royale map. Used by every mode."}
+};
+let mmMode=null;
 function renderModes(){
-  const cur=S.mode;if(pick===null)pick=cur;
-  $("modes").innerHTML=MODES.map(m=>`<button class="mcard m-${m.id} ${m.id===pick?"sel":""} ${m.id===cur?"cur":""}" data-m="${m.id}" aria-pressed="${m.id===pick}">
+  const cur=S.mode;
+  $("modes").innerHTML=MODES.map(m=>`<button class="mcard m-${m.id} ${m.id===cur?"cur sel":""}" data-m="${m.id}">
     ${m.id===cur?`<span class="tag live">● Live</span>`:""}<div class="mode-ic"><svg><use href="#${m.icon}"/></svg></div>
     <div class="mode-name" style="position:relative;z-index:1">${m.name}</div><p>${m.desc}</p><div class="meta"><span class="chip">${m.team}</span></div><span class="check"><svg style="width:14px;height:14px"><use href="#i-check"/></svg></span></button>`).join("");
-  $$("#modes .mcard").forEach(b=>b.onclick=()=>{pick=b.dataset.m;renderModes()});
-  $("mapName").textContent=S.map||"Alpha_Resculpt";$("mapIn").placeholder=S.map||"Alpha_Resculpt";
-  updateApply();
+  $$("#modes .mcard").forEach(b=>b.onclick=()=>openMatch(b.dataset.m));
+  const mp=MAPS[S.map]||{name:S.map||"-",desc:"Custom map."};
+  $("mapName").textContent=mp.name;$("mapDesc").textContent=mp.desc;
+  $("curModeChip").textContent=modeOf(S.mode)?.name||"-";
+  $("curBotsChip").textContent=S.bots>0?`${S.bots} bots`:"No bots";
 }
-function updateApply(){
-  const mp=$("mapIn").value.trim(),modeCh=pick&&pick!==S.mode,mapCh=mp&&mp!==S.map;
-  $("applyBar").classList.toggle("hide",!(modeCh||mapCh));
-  const parts=[];if(modeCh)parts.push(`<s>${modeOf(S.mode)?.name||"?"}</s> → ${modeOf(pick).name}`);if(mapCh)parts.push(`<s>${esc(S.map||"?")}</s> → ${esc(mp)}`);
-  $("diffTxt").innerHTML=parts.join(" · ");
-  $("applyGo").lastChild.textContent=$("noRestart").checked?"Save":"Apply & restart";
+function openMatch(id){
+  mmMode=id;const m=modeOf(id);
+  $("mmBadge").innerHTML=modeBadge(id);
+  const max=S.maxPlayers||42,n=S.playerCount||0,fill=Math.max(1,max-Math.max(n,1));
+  $("mmCount").value=fill;$("mmCount").max=max-1;
+  $("mmFillTxt").textContent=n?`${n} player(s) online now, so ${fill} bots fill the remaining slots.`:`Fills the empty slots so the match starts full.`;
+  const useFill=S.bots!==0;$$('input[name="bots"]').forEach(r=>r.checked=(r.value==="fill")===useFill);
+  syncBots();$("mm").classList.remove("hide");setTimeout(()=>document.querySelector('input[name="bots"]:checked').focus(),50);
 }
-$("mapIn").oninput=updateApply;$("noRestart").onchange=updateApply;
-$("mapReset").onclick=()=>{$("mapIn").value="Alpha_Resculpt";updateApply()};
-$("applyCancel").onclick=()=>{pick=S.mode;$("mapIn").value="";renderModes()};
-$("applyGo").onclick=async()=>{
-  const restart=!$("noRestart").checked,m=modeOf(pick);
+function syncBots(){$("mmCountRow").classList.toggle("hide",document.querySelector('input[name="bots"]:checked').value!=="fill")}
+$$('input[name="bots"]').forEach(r=>r.onchange=syncBots);
+$("mmCancel").onclick=()=>$("mm").classList.add("hide");
+async function applyMatch(restart){
+  const m=modeOf(mmMode),fill=document.querySelector('input[name="bots"]:checked').value==="fill";
+  const bots=fill?Math.max(1,Math.min(41,parseInt($("mmCount").value)||1)):0;
   if(restart&&S.online&&(S.playerCount||0)>0&&!await confirmBox("Restart with players online?",`${S.playerCount} player(s) will be disconnected while the server switches to ${m.name}.`,"Restart now",true))return;
-  $("applyGo").disabled=true;
-  try{await api("/api/mode",{mode:pick,map:$("mapIn").value.trim(),restart});toast(restart?`Switching to ${m.name}. Back in about a minute.`:"Saved. Applies on next restart.");$("mapIn").value="";pick=null;setTimeout(refresh,800)}
-  catch(e){toast(e.message)}$("applyGo").disabled=false};
+  $("mmGo").disabled=$("mmSave").disabled=true;
+  try{await api("/api/mode",{mode:mmMode,bots,restart});$("mm").classList.add("hide");
+    toast(restart?`Switching to ${m.name}${bots?` with ${bots} bots`:""}. Back in about a minute.`:"Saved. Applies on next restart.");setTimeout(refresh,800)}
+  catch(e){toast(e.message)}$("mmGo").disabled=$("mmSave").disabled=false}
+$("mmGo").onclick=()=>applyMatch(true);$("mmSave").onclick=()=>applyMatch(false);
 
 /* ---------------- actions ---------------- */
 $$("[data-act]").forEach(b=>b.onclick=async()=>{

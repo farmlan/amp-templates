@@ -30,6 +30,7 @@ STATES = {-1: "Unknown", 0: "Offline", 5: "Pre-start", 7: "Configuring", 10: "St
 BUSY = {5, 7, 10, 30, 40, 70, 75}
 MODES = {"Solo": "Solo", "Duo": "Duo", "Squad": "Squad", "Capture": "Dominion"}
 
+
 # Log patterns (the launcher strips the trailing !json{...} metadata)
 JOIN_RE = re.compile(r"Recieved join options,\{ PlayerName => (?P<name>[^,]+),")
 LEAVE_RES = [re.compile(p) for p in (
@@ -212,7 +213,7 @@ class Live:
         self.seq = 0
         self.online = {}                       # name -> session id
         self.match = None                      # (n, max) from MatchStartConditions
-        self.settings = {"mode": None, "map": None}
+        self.settings = {"mode": None, "map": None, "bots": None}
         self.last_metric = 0
         self.last_settings = 0
         self.last_state = None
@@ -283,7 +284,9 @@ def poll_once():
     live.last_state = st
 
     if now - live.last_settings > 20:
-        live.settings = {"mode": amp.get_setting("GameMode"), "map": amp.get_setting("MapName")}
+        bots = amp.get_setting("Bots")
+        live.settings = {"mode": amp.get_setting("GameMode"), "map": amp.get_setting("MapName"),
+                         "bots": int(bots) if str(bots or "").isdigit() else None}
         live.last_settings = now
 
     players = sorted(live.online)
@@ -296,7 +299,7 @@ def poll_once():
             "cpu": round(float(m.get("CPU Usage", {}).get("Percent", 0) or 0), 1),
             "memMB": float(mem.get("RawValue", 0) or 0), "memMaxMB": float(mem.get("MaxValue", 0) or 0),
             "mode": live.settings["mode"], "modeLabel": MODES.get(live.settings["mode"] or "", live.settings["mode"]),
-            "map": live.settings["map"], "matchFill": live.match,
+            "map": live.settings["map"], "bots": live.settings.get("bots"), "matchFill": live.match,
         }
         live.error = None
     if now - live.last_metric >= 15:
@@ -484,16 +487,17 @@ class H(BaseHTTPRequestHandler):
                 store.event("admin", f"Server {act} requested")
                 return self.send(200, {"ok": True})
             if p == "/api/mode":
-                mode, mp = b.get("mode"), (b.get("map") or "").strip()
+                mode = b.get("mode")
                 if mode not in MODES:
                     return self.send(400, {"error": "Unknown mode"})
-                if mp and not all(ch.isalnum() or ch in "_-" for ch in mp):
-                    return self.send(400, {"error": "Invalid map name"})
+                try:
+                    bots = max(0, min(41, int(b.get("bots", 0))))
+                except (TypeError, ValueError):
+                    return self.send(400, {"error": "Bots must be a number"})
                 amp.set_setting("GameMode", mode)
-                if mp:
-                    amp.set_setting("MapName", mp)
+                amp.set_setting("Bots", bots)
                 live.last_settings = 0
-                store.event("admin", f"Match set to {MODES[mode]}{' on ' + mp if mp else ''}")
+                store.event("admin", f"Match set to {MODES[mode]} with {bots or 'no'} bots")
                 if b.get("restart", True):
                     amp.call("Core/Restart")
                 return self.send(200, {"ok": True})
