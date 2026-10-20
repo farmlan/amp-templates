@@ -1,9 +1,9 @@
 [
   {
-    "UpdateStageName": "Create Server Folders",
+    "UpdateStageName": "Create Server Folder",
     "UpdateSourcePlatform": "Linux",
     "UpdateSource": "CreateDirectory",
-    "UpdateSourceArgs": "{{$FullRootDir}}server/game",
+    "UpdateSourceArgs": "{{$FullBaseDir}}game",
     "SkipOnFailure": false
   },
   {
@@ -17,11 +17,11 @@
     "SkipOnFailure": false
   },
   {
-    "UpdateStageName": "Pull Docker Image",
+    "UpdateStageName": "Install Project Reclaimer and Wine Runtime",
     "UpdateSourcePlatform": "Linux",
     "UpdateSource": "Executable",
     "UpdateSourceData": "/bin/bash",
-    "UpdateSourceArgs": "\"{{$FullBaseDir}}reclaimer-run.sh\" pull image={{Image}}",
+    "UpdateSourceArgs": "\"{{$FullBaseDir}}reclaimer-run.sh\" update version={{ReclaimerVersion}}",
     "SkipOnFailure": false
   }
 ]

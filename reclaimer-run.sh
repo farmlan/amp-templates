@@ -1,105 +1,112 @@
 #!/bin/bash
-# Project Reclaimer AMP launcher.
-# Runs ONE Reclaimer dedicated server from the official Docker image, in the
-# foreground, so AMP can start it, stop it and show its log. This is the same
-# container compose.yaml in the Reclaimer docs runs per server (host network,
-# SIGINT stop, /server and /cache mounts), with the server folder in this
-# AMP instance: <instance>/reclaimer/server.
+# Project Reclaimer AMP launcher, for the cubecoders/ampbase:wine-stable
+# container AMP creates for this instance. It does what the official Reclaimer
+# Docker image does (Wine + Xvfb + the dedicated build), inside AMP's own
+# container, so AMP keeps full control (start/stop/update/console/metrics).
 #
-#   reclaimer-run.sh run  port=49176 image=... gamedir=... cpus=... memory=...
-#   reclaimer-run.sh pull image=...
+#   reclaimer-run.sh update [version=latest]   download the dedicated build, prepare Wine
+#   reclaimer-run.sh run port=49176            run the [[server]] with that game port
 #
-# Typing in AMP's console runs "dedicated <what you typed>" inside the running
-# container, e.g.  status   |   rcon players   |   ban <id> --reason "..."
+# The server folder is this script's folder (<instance>/reclaimer/server), laid
+# out like C:\reclaimer from "dedicated init": dedicated.toml, game/, content/,
+# playlists/, bans.json, data/.
 set -u
-
 cd "$(dirname "$0")" || exit 1
-LAUNCHER_DIR="$PWD"
-ROOT_DIR="$(dirname "$LAUNCHER_DIR")"          # <instance>/reclaimer
-SERVER_DIR="$ROOT_DIR/server"
-INSTANCE="$(basename "$(dirname "$ROOT_DIR")")"  # AMP instance name
-NAME="amp-reclaimer-$(echo "$INSTANCE" | tr 'A-Z' 'a-z' | tr -c 'a-z0-9_.\n-' '-')"
-DEFAULT_IMAGE="ghcr.io/projectreclaimer/project-reclaimer-dedicated:latest"
+SERVER_DIR="$PWD"
+ROOT_DIR="$(dirname "$SERVER_DIR")"
+EXE="project-reclaimer.exe"
+REPO="https://github.com/ProjectReclaimer/project-reclaimer-releases"
+export WINEPREFIX="${WINEPREFIX:-$ROOT_DIR/.wine}" WINEARCH=win64 WINEDEBUG="${WINEDEBUG:--all}"
 
 MODE="${1:-run}"; shift || true
-PORT=""; IMAGE=""; GAMEDIR=""; CPUS=""; MEMORY=""
+PORT=""; VERSION=""
 for a in "$@"; do
   case "$a" in
-    port=*)   PORT="${a#port=}" ;;
-    image=*)  IMAGE="${a#image=}" ;;
-    gamedir=*) GAMEDIR="${a#gamedir=}" ;;
-    cpus=*)   CPUS="${a#cpus=}" ;;
-    memory=*) MEMORY="${a#memory=}" ;;
+    port=*) PORT="${a#port=}" ;;
+    version=*) VERSION="${a#version=}" ;;
   esac
 done
-[ -z "$IMAGE" ] && IMAGE="$DEFAULT_IMAGE"
 
-if command -v docker >/dev/null 2>&1; then CT=docker
-elif command -v podman >/dev/null 2>&1; then CT=podman
-else echo "ERROR: neither docker nor podman is installed for user $(id -un) on this host."; exit 1; fi
-if ! $CT info >/dev/null 2>&1; then
-  echo "ERROR: user $(id -un) can't use $CT. On the host run: sudo usermod -aG docker $(id -un)  then restart ADS (sudo systemctl restart ampinstmgr) or reboot."
-  exit 1
+if [ "$MODE" = "update" ]; then
+  set -e
+  [ -z "$VERSION" ] || [ "$VERSION" = "latest" ] && VERSION=""
+  if [ -z "$VERSION" ]; then
+    # /releases/latest/download/<x> redirects to /releases/download/v<version>/<x>
+    LOC=$(wget -q -S --max-redirect=0 "$REPO/releases/latest/download/x" -O /dev/null 2>&1 | sed -n 's/^ *[Ll]ocation: *//p' | head -1)
+    VERSION=$(echo "$LOC" | sed -n 's#.*/download/v\([^/]*\)/.*#\1#p')
+    [ -n "$VERSION" ] || { echo "Couldn't find the latest Project Reclaimer release"; exit 1; }
+  fi
+  VERSION="${VERSION#v}"
+  CUR=$(cat .reclaimer-version 2>/dev/null || true)
+  if [ "$CUR" = "$VERSION" ] && [ -f "$EXE" ]; then
+    echo "Project Reclaimer $VERSION is already installed"
+  else
+    echo "Downloading Project Reclaimer $VERSION (dedicated build)..."
+    wget -q "$REPO/releases/download/v$VERSION/project-reclaimer-dedicated-$VERSION.exe" -O "$EXE.new"
+    mv -f "$EXE.new" "$EXE"
+    echo "$VERSION" > .reclaimer-version
+    echo "Installed Project Reclaimer $VERSION"
+  fi
+  if [ ! -f "$WINEPREFIX/system.reg" ]; then
+    echo "Creating the Wine prefix..."
+    xvfb-run -a wineboot --init >/dev/null 2>&1 || true
+  fi
+  if [ ! -f "$WINEPREFIX/.vcrun2022" ]; then
+    echo "Installing the Visual C++ 2015-2022 runtime into Wine..."
+    wget -q "https://aka.ms/vs/17/release/vc_redist.x64.exe" -O "$ROOT_DIR/vc_redist.x64.exe"
+    xvfb-run -a wine "$ROOT_DIR/vc_redist.x64.exe" /quiet /norestart >/dev/null 2>&1 || true
+    rm -f "$ROOT_DIR/vc_redist.x64.exe"
+    touch "$WINEPREFIX/.vcrun2022"
+  fi
+  mkdir -p game content playlists data
+  echo "Update finished"
+  exit 0
 fi
 
-if [ "$MODE" = "pull" ]; then
-  echo "Pulling $IMAGE with $CT..."
-  exec $CT pull "$IMAGE"
+# ---- run ----
+[ -n "$PORT" ] || { echo "ERROR: no game port given"; exit 1; }
+[ -f "$EXE" ] || { echo "ERROR: $EXE is missing: click Update first"; exit 1; }
+if [ ! -f "game/halo3/halo3.dll" ] && [ ! -f "game/halo3/maps/shared.map" ]; then
+  echo "WARNING: no Halo 3 files in reclaimer/server/game yet. Upload them (see the README); the server will say what's missing."
 fi
+export RECLAIMER_DEDICATED_ONLY="$PORT"
+# Optional per-instance overrides, as in the Docker .env (RECLAIMER_DEDICATED_*=...)
+if [ -f "$ROOT_DIR/reclaimer.env" ]; then set -a; . "$ROOT_DIR/reclaimer.env"; set +a; fi
 
-if [ -z "$PORT" ]; then echo "ERROR: no game port given"; exit 1; fi
-
-# Folders must exist before the container starts, or Docker creates them owned
-# by root. The servers run as the owner of the server folder (amp).
-mkdir -p "$SERVER_DIR/game"
-ARGS=(run --rm --name "$NAME"
-  --network host
-  --stop-signal SIGINT --stop-timeout 30
-  --security-opt no-new-privileges:true
-  --log-driver json-file --log-opt max-size=10m --log-opt max-file=3
-  -v "$SERVER_DIR:/server"
-  -v "reclaimer-cache:/cache"
-  -e "RECLAIMER_DEDICATED_ONLY=$PORT")
-if [ -n "$GAMEDIR" ]; then
-  if [ ! -d "$GAMEDIR" ]; then echo "ERROR: Shared Game Files Folder $GAMEDIR doesn't exist on the host"; exit 1; fi
-  ARGS+=(-v "$GAMEDIR:/server/game:ro")
-fi
-# Optional per-instance settings, same as compose's .env (RECLAIMER_DEDICATED_*).
-[ -f "$ROOT_DIR/reclaimer.env" ] && ARGS+=(--env-file "$ROOT_DIR/reclaimer.env")
-[ -n "$CPUS" ] && ARGS+=(--cpus "$CPUS")
-[ -n "$MEMORY" ] && ARGS+=(--memory "$MEMORY")
-ARGS+=("$IMAGE")
-
-# A container left over from a crash would hold the name and the port.
-$CT rm -f "$NAME" >/dev/null 2>&1
-
+GAMEPID=""
 STOPPING=0
 stop_server() {
   STOPPING=1
-  echo "Stopping Project Reclaimer ($NAME)..."
-  $CT stop -t 30 "$NAME" >/dev/null 2>&1
+  echo "Stopping Project Reclaimer..."
+  # Ctrl+C is the documented clean stop; Wine passes SIGINT on as Ctrl+C.
+  # Signal the supervisor (the wine process), not xvfb-run.
+  pkill -INT -f "project-reclaimer\.exe dedicated *\$" 2>/dev/null
+  for _ in $(seq 1 30); do kill -0 "$GAMEPID" 2>/dev/null || break; sleep 1; done
+  if kill -0 "$GAMEPID" 2>/dev/null; then
+    echo "Still running after 30 s, forcing it to close"
+    wineserver -k 2>/dev/null; kill -KILL "$GAMEPID" 2>/dev/null
+  fi
 }
 trap stop_server TERM INT
 
-$CT image inspect "$IMAGE" >/dev/null 2>&1 || $CT pull "$IMAGE"
-echo "Starting $NAME from $IMAGE on UDP $PORT (server folder: $SERVER_DIR)"
-$CT "${ARGS[@]}" </dev/null 2>&1 &
-CPID=$!
+echo "Starting Project Reclaimer $(cat .reclaimer-version 2>/dev/null) on UDP $PORT"
+xvfb-run -a wine "$EXE" dedicated </dev/null 2>&1 &
+GAMEPID=$!
 
-# AMP console input -> "dedicated <command>" in the running container.
+# AMP console: each line runs "dedicated <command>" against the running server,
+# e.g.  status   |   ban <player ID | IP> --reason "..."   |   rcon players
 exec 3<&0
 (
   while IFS= read -r line <&3; do
     [ -z "$line" ] && continue
-    # sh -c keeps quoted arguments together, e.g. --reason "two words"
-    $CT exec "$NAME" sh -c "dedicated $line" 2>&1
+    eval "set -- $line"
+    wine "$EXE" dedicated "$@" </dev/null 2>&1 | sed -u 's/\r$//'
   done
 ) &
 RPID=$!
 
-while kill -0 "$CPID" 2>/dev/null; do wait "$CPID"; done
-wait "$CPID" 2>/dev/null; RC=$?
+while [ -n "$GAMEPID" ] && kill -0 "$GAMEPID" 2>/dev/null; do wait "$GAMEPID"; done
 kill "$RPID" 2>/dev/null
 [ "$STOPPING" = 1 ] && { echo "Project Reclaimer stopped"; exit 0; }
-echo "Project Reclaimer container exited ($RC)"
-exit "$RC"
+echo "Project Reclaimer exited"
+exit 1

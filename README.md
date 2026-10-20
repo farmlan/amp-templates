@@ -218,40 +218,40 @@ AMP permissions for the web UI user:
 
 `AMP_URL` in `/etc/spellbreak-webui.env` must point at the controller that handles logins (`http://192.168.5.13:8080`), not the local target ADS.
 
-## Project Reclaimer (Docker)
+## Project Reclaimer
 
-Template: `project-reclaimer.kvp`. Runs a Project Reclaimer (Halo 3) dedicated server from the official image `ghcr.io/projectreclaimer/project-reclaimer-dedicated`, one AMP instance per server, the same way the Reclaimer docs' `compose.yaml` runs one container per server.
+Template: `project-reclaimer.kvp`. Runs a [Project Reclaimer](https://projectreclaimer.dev/host) (Halo 3: MCC) dedicated server in AMP's `cubecoders/ampbase:wine-stable` container: Wine, Xvfb and the Reclaimer dedicated build, the same parts the official Reclaimer Docker image is made of. AMP can't run the official image itself (AMP containers must be built FROM ampbase), so this keeps AMP in full control instead. One AMP instance per server.
 
 ### How it runs
 
-AMP runs `reclaimer-run.sh` (fetched on Update) on the host, not in an AMP container. The launcher runs `docker run --rm --network host` with the instance's `reclaimer/server` folder mounted as `/server`, stops it with SIGINT on AMP Stop, and pipes its log to AMP's console. The game port AMP assigns is passed as `RECLAIMER_DEDICATED_ONLY`, so the instance runs the `[[server]]` in `dedicated.toml` with that port. Works with Podman if Docker isn't installed.
-
-Requirement: the `amp` user must be able to run `docker` (`sudo usermod -aG docker amp`, then restart ADS). The launcher says so in the console if not.
+`reclaimer-run.sh` (fetched on Update) lives in `reclaimer/server`, the server folder, laid out like `C:\reclaimer` from `dedicated init`. Update downloads `project-reclaimer-dedicated-<version>.exe` from the Reclaimer releases as `project-reclaimer.exe`, creates the Wine prefix and installs the Visual C++ 2015-2022 runtime. Start runs `project-reclaimer.exe dedicated` with `RECLAIMER_DEDICATED_ONLY` set to the AMP Game Port, so the instance runs the `[[server]]` in `dedicated.toml` with that port. Stop sends Ctrl+C (SIGINT), the documented clean stop.
 
 ### Setup
 
-1. Create the instance from **Project Reclaimer (Docker)**, After Creation **Update Once**.
-2. Upload the `game` folder made by `project-reclaimer.exe dedicated init C:\reclaimer --from` on a Windows PC with MCC + Halo 3 into `reclaimer/server/game` (AMP SFTP or File Manager).
-3. Start. The first start writes a commented `reclaimer/server/dedicated.toml` with two servers (UDP 49176 and 49177). Edit it, keeping the `port` of the instance's `[[server]]` equal to the AMP Game Port, then restart.
+1. Create the instance from **Project Reclaimer** on AMPHost01, After Creation **Update Once**.
+2. On a Windows PC with Steam MCC and Halo 3 (campaign included): `.\project-reclaimer.exe dedicated init C:\reclaimer --from` (add `--maps "Guardian,Valhalla"` for fewer maps).
+3. Upload the **contents** of `C:\reclaimer` (`dedicated.toml`, `game`, `content`, `playlists`, `bans.json`) into the instance's `reclaimer/server/` with SFTP (WinSCP, or `sftp -P <AMP SFTP port> <AMP user>@<host>`).
+4. In `dedicated.toml`, give the instance's `[[server]]` the same `port` as its AMP Game Port (first instance 49176). Start.
 
-Several instances can share one game folder: set **Shared Game Files Folder** to an absolute host path owned by `amp`.
+### Settings
+
+| Setting | Notes |
+| --- | --- |
+| Reclaimer Version | `latest` (default) installs the newest release on each Update. A version such as `0.9.21` pins it. Players need the same version. |
+
+Per-instance `RECLAIMER_DEDICATED_*` overrides go in `reclaimer/reclaimer.env` (one `NAME=value` per line).
 
 ### Console
 
-Typing in AMP's console runs `dedicated <command>` in the container: `status`, `rcon players`, `ban <player ID | IP> --reason "..."`, `check`.
+Each line typed runs `project-reclaimer.exe dedicated <line>`: `status`, `check`, `ban <player ID | IP> --reason "..."`, `unban <target>`, `playlist`.
 
 ### Ports
 
 | Port | Protocol | Purpose |
 | --- | --- | --- |
-| 49176 (Game Port) | UDP | Players and the Server Browser. Next instance: 49177, and so on |
-| 49175 | TCP | This machine's master (shared by every instance). Optional; open it if LAN players use it. |
+| 49176 (Game Port) | UDP | Players and the Server Browser. Next instance 49177, and so on. Forward on the router for WAN players. |
+| 49175 | TCP | This machine's own master. Optional: servers also list on the public masters. Not opened by AMP. |
 
 ### Updating
 
-Click Update: it pulls the image set in **Docker Image** (`:latest` by default). Restart the instance afterwards. Pin a version tag to stay on it.
-
-### Notes
-
-- AMP's CPU and memory graphs show the launcher, not the container. Use `docker stats`.
-- Per-instance `RECLAIMER_DEDICATED_*` overrides go in `reclaimer/reclaimer.env`.
+Click Update, then Restart. Every player must be on the same Reclaimer version as the server.
