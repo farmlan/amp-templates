@@ -60,14 +60,18 @@ if [ "$MODE" = "update" ]; then
     echo "$VERSION" > .reclaimer-version
     echo "Installed Project Reclaimer $VERSION"
   fi
-  if [ ! -f "$WINEPREFIX/system.reg" ]; then
+  if [ ! -f "$WINEPREFIX/.prefix-ready" ]; then
     echo "Creating the Wine prefix..."
-    xvfb-run -a wineboot --init >/dev/null 2>&1 || true
+    # Skip the Mono/Gecko install prompts, which would wait forever on Xvfb.
+    WINEDLLOVERRIDES="mscoree=;mshtml=" timeout 300 wineboot --init >/dev/null 2>&1 || true
+    timeout 60 wineserver -w 2>/dev/null || true
+    [ -f "$WINEPREFIX/system.reg" ] && touch "$WINEPREFIX/.prefix-ready"
   fi
   if [ ! -f "$WINEPREFIX/.vcrun2022" ]; then
     echo "Installing the Visual C++ 2015-2022 runtime into Wine..."
     if wget -q "https://aka.ms/vs/17/release/vc_redist.x64.exe" -O "$ROOT_DIR/vc_redist.x64.exe"; then
-      xvfb-run -a wine "$ROOT_DIR/vc_redist.x64.exe" /quiet /norestart >/dev/null 2>&1 || true
+      timeout 600 xvfb-run -a wine "$ROOT_DIR/vc_redist.x64.exe" /install /quiet /norestart >/dev/null 2>&1 || true
+      timeout 60 wineserver -w 2>/dev/null || true
       touch "$WINEPREFIX/.vcrun2022"
       echo "Visual C++ runtime installed"
     else
