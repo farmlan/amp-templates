@@ -77,7 +77,8 @@ if [ "$MODE" = "update" ]; then
         touch "$WINEPREFIX/.vcrun2022"
         echo "Visual C++ runtime installed"
       else
-        echo "WARNING: winetricks vcrun2022 didn't finish (see reclaimer/winetricks.log). The server will use Wine's built-in runtime; Update tries again next time."
+        echo "WARNING: winetricks vcrun2022 didn't finish. The server will use Wine's built-in runtime; Update tries again next time. Last lines of its log:"
+        tail -n 15 "$ROOT_DIR/winetricks.log" | sed 's/^/  winetricks: /'
       fi
       timeout 30 wineserver -k 2>/dev/null || true
     else
