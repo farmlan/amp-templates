@@ -60,12 +60,29 @@ if [ "$MODE" = "update" ]; then
     echo "$VERSION" > .reclaimer-version
     echo "Installed Project Reclaimer $VERSION"
   fi
+  # A prefix left half-built by an interrupted update can't load kernel32.dll:
+  # check it really works, and rebuild it if not.
+  prefix_ok() { [ "$(timeout 120 wine cmd.exe /c echo ok 2>/dev/null | tr -d '\r')" = "ok" ]; }
+  if [ -f "$WINEPREFIX/.prefix-ready" ] && ! prefix_ok; then
+    echo "The Wine prefix is damaged: rebuilding it"
+    timeout 30 wineserver -k 2>/dev/null || true
+    rm -rf "$WINEPREFIX"
+  fi
   if [ ! -f "$WINEPREFIX/.prefix-ready" ]; then
     echo "Creating the Wine prefix..."
+    timeout 30 wineserver -k 2>/dev/null || true
+    rm -rf "$WINEPREFIX"
     # Skip the Mono/Gecko install prompts, which would wait forever on Xvfb.
     WINEDLLOVERRIDES="mscoree=;mshtml=" timeout 300 wineboot --init >/dev/null 2>&1 || true
-    timeout 60 wineserver -w 2>/dev/null || true
-    [ -f "$WINEPREFIX/system.reg" ] && touch "$WINEPREFIX/.prefix-ready"
+    timeout 120 wineserver -w 2>/dev/null || true
+    if prefix_ok; then
+      touch "$WINEPREFIX/.prefix-ready"
+      echo "Wine prefix ready ($(wine --version 2>/dev/null))"
+    else
+      echo "ERROR: Wine can't run programs in this container (wine cmd.exe failed)."
+      timeout 60 wine cmd.exe /c echo ok 2>&1 | tail -n 10 | sed 's/^/  wine: /'
+      exit 1
+    fi
   fi
   if [ ! -f "$WINEPREFIX/.vcrun2022" ]; then
     # Same as the Reclaimer docs' Linux setup: winetricks vcrun2022. Not fatal:
