@@ -217,3 +217,41 @@ AMP permissions for the web UI user:
 - Inside the instance: a role (e.g. "Spellbreak WebUI") allowing Start, Stop, Restart, Read Console and `Settings.Meta.GenericModule.*`, with the user as a member.
 
 `AMP_URL` in `/etc/spellbreak-webui.env` must point at the controller that handles logins (`http://192.168.5.13:8080`), not the local target ADS.
+
+## Project Reclaimer (Docker)
+
+Template: `project-reclaimer.kvp`. Runs a Project Reclaimer (Halo 3) dedicated server from the official image `ghcr.io/projectreclaimer/project-reclaimer-dedicated`, one AMP instance per server, the same way the Reclaimer docs' `compose.yaml` runs one container per server.
+
+### How it runs
+
+AMP runs `reclaimer-run.sh` (fetched on Update) on the host, not in an AMP container. The launcher runs `docker run --rm --network host` with the instance's `reclaimer/server` folder mounted as `/server`, stops it with SIGINT on AMP Stop, and pipes its log to AMP's console. The game port AMP assigns is passed as `RECLAIMER_DEDICATED_ONLY`, so the instance runs the `[[server]]` in `dedicated.toml` with that port. Works with Podman if Docker isn't installed.
+
+Requirement: the `amp` user must be able to run `docker` (`sudo usermod -aG docker amp`, then restart ADS). The launcher says so in the console if not.
+
+### Setup
+
+1. Create the instance from **Project Reclaimer (Docker)**, After Creation **Update Once**.
+2. Upload the `game` folder made by `project-reclaimer.exe dedicated init C:\reclaimer --from` on a Windows PC with MCC + Halo 3 into `reclaimer/server/game` (AMP SFTP or File Manager).
+3. Start. The first start writes a commented `reclaimer/server/dedicated.toml` with two servers (UDP 49176 and 49177). Edit it, keeping the `port` of the instance's `[[server]]` equal to the AMP Game Port, then restart.
+
+Several instances can share one game folder: set **Shared Game Files Folder** to an absolute host path owned by `amp`.
+
+### Console
+
+Typing in AMP's console runs `dedicated <command>` in the container: `status`, `rcon players`, `ban <player ID | IP> --reason "..."`, `check`.
+
+### Ports
+
+| Port | Protocol | Purpose |
+| --- | --- | --- |
+| 49176 (Game Port) | UDP | Players and the Server Browser. Next instance: 49177, and so on |
+| 49175 | TCP | This machine's master (shared by every instance). Optional; open it if LAN players use it. |
+
+### Updating
+
+Click Update: it pulls the image set in **Docker Image** (`:latest` by default). Restart the instance afterwards. Pin a version tag to stay on it.
+
+### Notes
+
+- AMP's CPU and memory graphs show the launcher, not the container. Use `docker stats`.
+- Per-instance `RECLAIMER_DEDICATED_*` overrides go in `reclaimer/reclaimer.env`.
