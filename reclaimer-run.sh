@@ -68,16 +68,21 @@ if [ "$MODE" = "update" ]; then
     [ -f "$WINEPREFIX/system.reg" ] && touch "$WINEPREFIX/.prefix-ready"
   fi
   if [ ! -f "$WINEPREFIX/.vcrun2022" ]; then
-    echo "Installing the Visual C++ 2015-2022 runtime into Wine..."
-    if wget -q "https://aka.ms/vs/17/release/vc_redist.x64.exe" -O "$ROOT_DIR/vc_redist.x64.exe"; then
-      timeout 600 xvfb-run -a wine "$ROOT_DIR/vc_redist.x64.exe" /install /quiet /norestart >/dev/null 2>&1 || true
-      timeout 60 wineserver -w 2>/dev/null || true
-      touch "$WINEPREFIX/.vcrun2022"
-      echo "Visual C++ runtime installed"
+    # Same as the Reclaimer docs' Linux setup: winetricks vcrun2022. Not fatal:
+    # if it can't finish, Wine's own built-in runtime DLLs are used instead.
+    echo "Installing the Visual C++ 2015-2022 runtime into Wine (winetricks vcrun2022, a few minutes)..."
+    if wget -q "https://raw.githubusercontent.com/Winetricks/winetricks/refs/tags/20260125/src/winetricks" -O "$ROOT_DIR/winetricks"; then
+      chmod +x "$ROOT_DIR/winetricks"
+      if timeout 900 xvfb-run -a "$ROOT_DIR/winetricks" -q --unattended vcrun2022 > "$ROOT_DIR/winetricks.log" 2>&1; then
+        touch "$WINEPREFIX/.vcrun2022"
+        echo "Visual C++ runtime installed"
+      else
+        echo "WARNING: winetricks vcrun2022 didn't finish (see reclaimer/winetricks.log). The server will use Wine's built-in runtime; Update tries again next time."
+      fi
+      timeout 30 wineserver -k 2>/dev/null || true
     else
-      echo "WARNING: couldn't download the Visual C++ runtime; Update will try again next time"
+      echo "WARNING: couldn't download winetricks; Update will try again next time"
     fi
-    rm -f "$ROOT_DIR/vc_redist.x64.exe"
   fi
   mkdir -p game content playlists data
   echo "Update finished"
